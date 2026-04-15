@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>証明写真 40×30mm 変換アプリ</title>
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --card: #ffffff;
+      --line: #d9e0ea;
+      --text: #16202a;
+      --muted: #5c6b7a;
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --good: #16a34a;
+      --warn: #b45309;
+      --shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+      --radius: 20px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .wrap {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    h1 {
+      font-size: 28px;
+      margin: 0 0 8px;
+    }
+
+    .lead {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .hero,
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .hero {
+      padding: 22px;
+      margin-bottom: 20px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.4fr 0.9fr;
+      gap: 20px;
+    }
+
+    .card {
+      padding: 18px;
+    }
+
+    .card h2 {
+      margin: 0 0 14px;
+      font-size: 20px;
+    }
+
+    .section + .section {
+      margin-top: 20px;
+    }
+
+    .buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    button,
+    .fake-button {
+      border: none;
+      border-radius: 14px;
+      padding: 12px 16px;
+      font-size: 14px;
+      cursor: pointer;
+      background: var(--primary);
+      color: #fff;
+      transition: 0.2s ease;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
+    }
+
+    button:hover,
+    .fake-button:hover {
+      background: var(--primary-dark);
+    }
+
+    button.secondary {
+      background: #0f766e;
+    }
+
+    button.secondary:hover {
+      background: #115e59;
+    }
+
+    button.outline {
+      background: #fff;
+      color: var(--text);
+      border: 1px solid var(--line);
+    }
+
+    button.outline:hover {
+      background: #f8fafc;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    .canvas-box {
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      overflow: hidden;
+      background: #eef2f7;
+    }
+
+    #editorCanvas {
+      width: 100%;
+      display: block;
+      touch-action: none;
+      background: #e8edf5;
+    }
+
+    .status {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .control {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 14px;
+      margin-bottom: 12px;
+      background: #fff;
+    }
+
+    .control-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      gap: 12px;
+    }
+
+    .control label {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .control .value {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    input[type="range"] {
+      width: 100%;
+    }
+
+    .check {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 14px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 12px;
+      background: #fff;
+    }
+
+    .check label {
+      font-size: 14px;
+      line-height: 1.5;
+      cursor: pointer;
+    }
+
+    .preview-wrap {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: #fff;
+      min-height: 360px;
+      padding: 16px;
+    }
+
+    #outputCanvas {
+      max-width: 100%;
+      height: auto;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+      background: #fff;
+    }
+
+    .subinfo {
+      margin-top: 12px;
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.8;
+    }
+
+    .alert {
+      border-radius: 18px;
+      padding: 14px 16px;
+      border: 1px solid var(--line);
+      background: #fff;
+      line-height: 1.8;
+      font-size: 14px;
+      color: var(--text);
+    }
+
+    .alert.warn {
+      background: #fff8eb;
+      border-color: #f4d7a3;
+    }
+
+    .alert strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .dpi-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 6px;
+    }
+
+    .dpi-row button.active {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+
+    .footer-note {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.7;
+      margin-top: 12px;
+    }
+
+    @media (max-width: 900px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      h1 {
+        font-size: 24px;
+      }
+
+      .wrap {
+        padding: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="hero">
+      <h1>証明写真 40×30mm 変換アプリ</h1>
+      <p class="lead">
+        紙の証明写真をスマートフォンで撮影または選択し、四辺の自動検出、手動微調整、明るさ補正、顔位置ガイド表示を行って、
+        WEB履歴書・職務経歴書向けの40×30mm比率の画像として保存できます。
+      </p>
+    </div>
+
+    <div class="grid">
+      <div>
+        <div class="card section">
+          <h2>1. 画像の読み込みと調整</h2>
+          <div class="buttons">
+            <label class="fake-button" for="fileInput">カメラ / 画像を開く</label>
+            <button id="autoDetectBtn" class="secondary" disabled>四辺を自動検出</button>
+            <button id="resetBtn" class="outline" disabled>リセット</button>
+          </div>
+
+          <input id="fileInput" type="file" accept="image/*" capture="environment" />
+
+          <div class="canvas-box">
+            <canvas id="editorCanvas"></canvas>
+          </div>
+          <div id="status" class="status">紙の証明写真を撮影または選択してください。</div>
+        </div>
+
+        <div class="card section">
+          <h2>2. 補正設定</h2>
+
+          <div class="control">
+            <div class="control-top">
+              <label for="brightness">明るさ</label>
+              <div class="value"><span id="brightnessVal">0</span></div>
+            </div>
+            <input id="brightness" type="range" min="-100" max="100" step="1" value="0" />
+          </div>
+
+          <div class="control">
+            <div class="control-top">
+              <label for="contrast">コントラスト</label>
+              <div class="value"><span id="contrastVal">0</span></div>
+            </div>
+            <input id="contrast" type="range" min="-100" max="100" step="1" value="0" />
+          </div>
+
+          <div class="control">
+            <div class="control-top">
+              <label for="exposure">露出感</label>
+              <div class="value"><span id="exposureVal">0.0</span></div>
+            </div>
+            <input id="exposure" type="range" min="-3" max="3" step="0.1" value="0" />
+          </div>
+
+          <div class="control">
+            <div class="control-top">
+              <label for="rotation">回転（プレビュー用）</label>
+              <div class="value"><span id="rotationVal">0</span></div>
+            </div>
+            <input id="rotation" type="range" min="-15" max="15" step="0.5" value="0" />
+          </div>
+
+          <div class="check">
+            <input id="faceGuide" type="checkbox" checked />
+            <label for="faceGuide">顔位置ガイドを表示する</label>
+          </div>
+
+          <div class="check">
+            <input id="monoBg" type="checkbox" />
+            <label for="monoBg">背景のムラを目立ちにくくするため、モノクロ寄りにする</label>
+          </div>
+
+          <div class="control">
+            <div class="control-top">
+              <label>出力解像度（DPI）</label>
+              <div class="value"><span id="dpiInfo">300 DPI</span></div>
+            </div>
+            <div class="dpi-row">
+              <button type="button" class="outline dpi-btn" data-dpi="200">200 DPI</button>
+              <button type="button" class="outline dpi-btn active" data-dpi="300">300 DPI</button>
+              <button type="button" class="outline dpi-btn" data-dpi="350">350 DPI</button>
+            </div>
+            <div class="footer-note" id="sizeInfo">出力サイズ: 40×30mm / 472×354px</div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="card section">
+          <h2>3. 出力プレビュー</h2>
+          <div class="preview-wrap">
+            <canvas id="outputCanvas"></canvas>
+          </div>
+          <div class="buttons" style="margin-top:14px;">
+            <button id="downloadBtn" disabled>PNGを書き出す</button>
+          </div>
+          <div class="subinfo">
+            WEB履歴書では実寸より縦横比や見た目が重視されることが多いですが、提出先によって要件が異なります。
+          </div>
+        </div>
+
+        <div class="card section">
+          <div class="alert">
+            <strong>このアプリでできること</strong>
+            紙写真の取り込み、自動四辺検出、四隅の手動調整、明るさ・コントラスト補正、顔位置ガイド表示、40×30mm比率でのPNG保存に対応しています。
+          </div>
+        </div>
+
+        <div class="card section">
+          <div class="alert warn">
+            <strong>使うときのコツ</strong>
+            証明写真を白い紙や机の上に置いて真上から撮ると、自動検出の精度が上がりやすいです。影が強い場合は少し位置を変えて撮り直すと整えやすくなります。
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const CANVAS_W = 900;
+    const CANVAS_H = 1200;
+    const HANDLE_RADIUS = 14;
+    const ID_W_MM = 30;
+    const ID_H_MM = 40;
+
+    const fileInput = document.getElementById("fileInput");
+    const editorCanvas = document.getElementById("editorCanvas");
+    const outputCanvas = document.getElementById("outputCanvas");
+    const statusEl = document.getElementById("status");
+    const autoDetectBtn = document.getElementById("autoDetectBtn");
+    const resetBtn = document.getElementById("resetBtn");
+    const downloadBtn = document.getElementById("downloadBtn");
+
+    const brightnessInput = document.getElementById("brightness");
+    const contrastInput = document.getElementById("contrast");
+    const exposureInput = document.getElementById("exposure");
+    const rotationInput = document.getElementById("rotation");
+    const faceGuideInput = document.getElementById("faceGuide");
+    const monoBgInput = document.getElementById("monoBg");
+
+    const brightnessVal = document.getElementById("brightnessVal");
+    const contrastVal = document.getElementById("contrastVal");
+    const exposureVal = document.getElementById("exposureVal");
+    const rotationVal = document.getElementById("rotationVal");
+    const dpiInfo = document.getElementById("dpiInfo");
+    const sizeInfo = document.getElementById("sizeInfo");
+
+    const dpiButtons = Array.from(document.querySelectorAll(".dpi-btn"));
+
+    editorCanvas.width = CANVAS_W;
+    editorCanvas.height = CANVAS_H;
+
+    let image = null;
+    let corners = [];
+    let activeCorner = null;
+    let dpi = 300;
+
+    const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+    const pxFromMm = (mm, d = dpi) => Math.round((mm / 25.4) * d);
+
+    function setStatus(text) {
+      statusEl.textContent = text;
+    }
+
+    function updateValueLabels() {
+      brightnessVal.textContent = brightnessInput.value;
+      contrastVal.textContent = contrastInput.value;
+      exposureVal.textContent = Number(exposureInput.value).toFixed(1);
+      rotationVal.textContent = rotationInput.value;
+      dpiInfo.textContent = dpi + " DPI";
+      sizeInfo.textContent = `出力サイズ: 40×30mm / ${pxFromMm(40)}×${pxFromMm(30)}px`;
+    }
+
+    function distance(a, b) {
+      return Math.hypot(a.x - b.x, a.y - b.y);
+    }
+
+    function lerp(a, b, t) {
+      return a + (b - a) * t;
+    }
+
+    function bilerpPoint(tl, tr, br, bl, u, v) {
+      const top = { x: lerp(tl.x, tr.x, u), y: lerp(tl.y, tr.y, u) };
+      const bottom = { x: lerp(bl.x, br.x, u), y: lerp(bl.y, br.y, u) };
+      return { x: lerp(top.x, bottom.x, v), y: lerp(top.y, bottom.y, v) };
+    }
+
+    function getDefaultCorners(img) {
+      const scale = Math.min(CANVAS_W / img.width, CANVAS_H / img.height);
+      const dw = img.width * scale;
+      const dh = img.height * scale;
+      const ox = (CANVAS_W - dw) / 2;
+      const oy = (CANVAS_H - dh) / 2;
+      const marginX = dw * 0.16;
+      const marginY = dh * 0.12;
+
+      return [
+        { x: ox + marginX, y: oy + marginY },
+        { x: ox + dw - marginX, y: oy + marginY },
+        { x: ox + dw - marginX, y: oy + dh - marginY },
+        { x: ox + marginX, y: oy + dh - marginY }
+      ];
+    }
+
+    function loadImageFromFile(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const img = new Image();
+          img.onload = () => resolve(img);
+          img.onerror = reject;
+          img.src = reader.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function createSourceCanvas(img) {
+      const c = document.createElement("canvas");
+      c.width = img.width;
+      c.height = img.height;
+      c.getContext("2d").drawImage(img, 0, 0);
+      return c;
+    }
+
+    function sampleBilinear(src, sw, sh, x, y) {
+      const x0 = clamp(Math.floor(x), 0, sw - 1);
+      const y0 = clamp(Math.floor(y), 0, sh - 1);
+      const x1 = clamp(x0 + 1, 0, sw - 1);
+      const y1 = clamp(y0 + 1, 0, sh - 1);
+      const dx = x - x0;
+      const dy = y - y0;
+
+      const idx = (xx, yy) => (yy * sw + xx) * 4;
+
+      const i00 = idx(x0, y0);
+      const i10 = idx(x1, y0);
+      const i01 = idx(x0, y1);
+      const i11 = idx(x1, y1);
+
+      const out = [0, 0, 0, 0];
+
+      for (let c = 0; c < 4; c++) {
+        const v00 = src[i00 + c];
+        const v10 = src[i10 + c];
+        const v01 = src[i01 + c];
+        const v11 = src[i11 + c];
+        const v0 = v00 * (1 - dx) + v10 * dx;
+        const v1 = v01 * (1 - dx) + v11 * dx;
+        out[c] = v0 * (1 - dy) + v1 * dy;
+      }
+
+      return out;
+    }
+
+    function drawPerspectiveCrop() {
+      if (!image || corners.length !== 4) return;
+
+      const outW = pxFromMm(30);
+      const outH = pxFromMm(40);
+
+      outputCanvas.width = outW;
+      outputCanvas.height = outH;
+
+      const sourceCanvas = createSourceCanvas(image);
+      const srcCtx = sourceCanvas.getContext("2d", { willReadFrequently: true });
+      const srcImg = srcCtx.getImageData(0, 0, sourceCanvas.width, sourceCanvas.height);
+      const src = srcImg.data;
+
+      const outCtx = outputCanvas.getContext("2d", { willReadFrequently: true });
+      const outImg = outCtx.createImageData(outW, outH);
+
+      const scaleX = image.width / CANVAS_W;
+      const scaleY = image.height / CANVAS_H;
+
+      const mapped = corners.map(p => ({
+        x: p.x * scaleX,
+        y: p.y * scaleY
+      }));
+
+      const tl = mapped[0];
+      const tr = mapped[1];
+      const br = mapped[2];
+      const bl = mapped[3];
+
+      const brightness = Number(brightnessInput.value);
+      const contrast = Number(contrastInput.value);
+      const exposure = Number(exposureInput.value);
+      const mono = monoBgInput.checked;
+      const contrastFactor = (259 * (contrast + 255)) / (255 * (259 - contrast || 1));
+
+      for (let y = 0; y < outH; y++) {
+        for (let x = 0; x < outW; x++) {
+          const u = x / ((outW - 1) || 1);
+          const v = y / ((outH - 1) || 1);
+          const p = bilerpPoint(tl, tr, br, bl, u, v);
+          let [r, g, b, a] = sampleBilinear(src, sourceCanvas.width, sourceCanvas.height, p.x, p.y);
+
+          r += brightness + exposure * 40;
+          g += brightness + exposure * 40;
+          b += brightness + exposure * 40;
+
+          r = contrastFactor * (r - 128) + 128;
+          g = contrastFactor * (g - 128) + 128;
+          b = contrastFactor * (b - 128) + 128;
+
+          if (mono) {
+            const lum = r * 0.299 + g * 0.587 + b * 0.114;
+            r = lum;
+            g = lum;
+            b = lum;
+          }
+
+          const i = (y * outW + x) * 4;
+          outImg.data[i] = clamp(Math.round(r), 0, 255);
+          outImg.data[i + 1] = clamp(Math.round(g), 0, 255);
+          outImg.data[i + 2] = clamp(Math.round(b), 0, 255);
+          outImg.data[i + 3] = clamp(Math.round(a), 0, 255);
+        }
+      }
+
+      outCtx.putImageData(outImg, 0, 0);
+    }
+
+    function drawEditor() {
+      const ctx = editorCanvas.getContext("2d");
+      ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
+
+      if (!image) {
+        ctx.fillStyle = "#dbe4ef";
+        ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+        ctx.fillStyle = "#5c6b7a";
+        ctx.font = "24px sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("画像を読み込むとここに表示されます", CANVAS_W / 2, CANVAS_H / 2);
+        return;
+      }
+
+      const scale = Math.min(CANVAS_W / image.width, CANVAS_H / image.height);
+      const dw = image.width * scale;
+      const dh = image.height * scale;
+      const ox = (CANVAS_W - dw) / 2;
+      const oy = (CANVAS_H - dh) / 2;
+
+      ctx.save();
+      ctx.translate(CANVAS_W / 2, CANVAS_H / 2);
+      ctx.rotate(Number(rotationInput.value) * Math.PI / 180);
+      ctx.translate(-CANVAS_W / 2, -CANVAS_H / 2);
+      ctx.filter = `brightness(${100 + Number(brightnessInput.value) * 0.4}%) contrast(${100 + Number(contrastInput.value) * 0.6}%)`;
+      ctx.drawImage(image, ox, oy, dw, dh);
+      ctx.restore();
+      ctx.filter = "none";
+
+      if (corners.length === 4) {
+        ctx.save();
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = "#16a34a";
+        ctx.fillStyle = "rgba(22,163,74,0.15)";
+        ctx.beginPath();
+        ctx.moveTo(corners[0].x, corners[0].y);
+        ctx.lineTo(corners[1].x, corners[1].y);
+        ctx.lineTo(corners[2].x, corners[2].y);
+        ctx.lineTo(corners[3].x, corners[3].y);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+
+        if (faceGuideInput.checked) {
+          drawFaceGuide(ctx);
+        }
+
+        corners.forEach((p, i) => {
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, HANDLE_RADIUS, 0, Math.PI * 2);
+          ctx.fillStyle = activeCorner === i ? "#0f172a" : "#ffffff";
+          ctx.strokeStyle = "#0f172a";
+          ctx.lineWidth = 3;
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.fillStyle = activeCorner === i ? "#ffffff" : "#0f172a";
+          ctx.font = "bold 12px sans-serif";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(String(i + 1), p.x, p.y + 1);
+          ctx.restore();
+        });
+
+        ctx.save();
+        ctx.fillStyle = "rgba(15,23,42,0.72)";
+        ctx.fillRect(12, 12, 470, 78);
+        ctx.fillStyle = "#fff";
+        ctx.font = "14px sans-serif";
+        ctx.fillText("四隅をドラッグして証明写真の端に合わせてください", 24, 36);
+        ctx.fillText(`露出 ${Number(exposureInput.value).toFixed(1)} / 明るさ ${brightnessInput.value} / コントラスト ${contrastInput.value}`, 24, 58);
+        ctx.fillText(faceGuideInput.checked ? "顔位置ガイド表示中" : "顔位置ガイド非表示", 24, 80);
+        ctx.restore();
+      }
+
+      drawPerspectiveCrop();
+    }
+
+    function drawFaceGuide(ctx) {
+      if (corners.length !== 4) return;
+
+      const tl = corners[0];
+      const tr = corners[1];
+      const br = corners[2];
+      const bl = corners[3];
+
+      const rect = {
+        x: tl.x,
+        y: tl.y,
+        w: tr.x - tl.x,
+        h: bl.y - tl.y
+      };
+
+      const headTopY = rect.y + rect.h * 0.12;
+      const eyeLineY = rect.y + rect.h * 0.38;
+      const chinBottomY = rect.y + rect.h * 0.86;
+      const centerX = rect.x + rect.w * 0.5;
+
+      ctx.save();
+      ctx.strokeStyle = "rgba(37,99,235,0.95)";
+      ctx.lineWidth = 2;
+      ctx.setLineDash([8, 6]);
+
+      [headTopY, eyeLineY, chinBottomY].forEach(y => {
+        ctx.beginPath();
+        ctx.moveTo(rect.x, y);
+        ctx.lineTo(rect.x + rect.w, y);
+        ctx.stroke();
+      });
+
+      ctx.beginPath();
+      ctx.moveTo(centerX, rect.y + rect.h * 0.08);
+      ctx.lineTo(centerX, rect.y + rect.h * 0.92);
+      ctx.stroke();
+
+      ctx.setLineDash([]);
+      ctx.beginPath();
+      ctx.ellipse(centerX, rect.y + rect.h * 0.49, rect.w * 0.28, rect.h * 0.33, 0, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.fillStyle = "rgba(37,99,235,0.95)";
+      ctx.font = "12px sans-serif";
+      ctx.fillText("頭頂目安", rect.x + 8, headTopY - 6);
+      ctx.fillText("目線目安", rect.x + 8, eyeLineY - 6);
+      ctx.fillText("あご下目安", rect.x + 8, chinBottomY - 6);
+      ctx.restore();
+    }
+
+    function detectPhotoEdges(img) {
+      const sampleMax = 1400;
+      const scale = Math.min(1, sampleMax / Math.max(img.width, img.height));
+      const w = Math.max(64, Math.round(img.width * scale));
+      const h = Math.max(64, Math.round(img.height * scale));
+
+      const c = document.createElement("canvas");
+      c.width = w;
+      c.height = h;
+      const ctx = c.getContext("2d", { willReadFrequently: true });
+      ctx.drawImage(img, 0, 0, w, h);
+
+      const { data } = ctx.getImageData(0, 0, w, h);
+
+      const gray = new Float32Array(w * h);
+      for (let i = 0, p = 0; i < gray.length; i++, p += 4) {
+        gray[i] = data[p] * 0.299 + data[p + 1] * 0.587 + data[p + 2] * 0.114;
+      }
+
+      const edgeCols = new Float32Array(w);
+      const edgeRows = new Float32Array(h);
+
+      for (let x = 2; x < w - 2; x++) {
+        let sum = 0;
+        for (let y = 2; y < h - 2; y++) {
+          const idx = y * w + x;
+          const gx = -gray[idx - 2] - 2 * gray[idx - 1] + 2 * gray[idx + 1] + gray[idx + 2];
+          sum += Math.abs(gx);
+        }
+        edgeCols[x] = sum / h;
+      }
+
+      for (let y = 2; y < h - 2; y++) {
+        let sum = 0;
+        for (let x = 2; x < w - 2; x++) {
+          const idx = y * w + x;
+          const gy = -gray[idx - 2 * w] - 2 * gray[idx - w] + 2 * gray[idx + w] + gray[idx + 2 * w];
+          sum += Math.abs(gy);
+        }
+        edgeRows[y] = sum / w;
+      }
+
+      function smooth(arr, radius = 5) {
+        const out = new Float32Array(arr.length);
+        for (let i = 0; i < arr.length; i++) {
+          let sum = 0;
+          let count = 0;
+          for (let k = -radius; k <= radius; k++) {
+            const j = i + k;
+            if (j >= 0 && j < arr.length) {
+              sum += arr[j];
+              count++;
+            }
+          }
+          out[i] = sum / count;
+        }
+        return out;
+      }
+
+      function pickTopPeaks(arr, start, end, count, minGap) {
+        const peaks = [];
+        for (let i = start; i < end; i++) {
+          peaks.push({ index: i, score: arr[i] });
+        }
+        peaks.sort((a, b) => b.score - a.score);
+
+        const selected = [];
+        for (const p of peaks) {
+          if (selected.every(s => Math.abs(s.index - p.index) >= minGap)) {
+            selected.push(p);
+            if (selected.length >= count) break;
+          }
+        }
+        return selected.sort((a, b) => a.index - b.index);
+      }
+
+      const cols = smooth(edgeCols, 5);
+      const rows = smooth(edgeRows, 5);
+
+      const leftCandidates = pickTopPeaks(cols, Math.floor(w * 0.03), Math.floor(w * 0.45), 8, Math.floor(w * 0.03));
+      const rightCandidates = pickTopPeaks(cols, Math.floor(w * 0.55), Math.floor(w * 0.97), 8, Math.floor(w * 0.03));
+      const topCandidates = pickTopPeaks(rows, Math.floor(h * 0.03), Math.floor(h * 0.45), 8, Math.floor(h * 0.03));
+      const bottomCandidates = pickTopPeaks(rows, Math.floor(h * 0.55), Math.floor(h * 0.97), 8, Math.floor(h * 0.03));
+
+      const targetAspect = 30 / 40;
+      let best = null;
+
+      for (const l of leftCandidates) {
+        for (const r of rightCandidates) {
+          for (const t of topCandidates) {
+            for (const b of bottomCandidates) {
+              const rectW = r.index - l.index;
+              const rectH = b.index - t.index;
+              if (rectW < w * 0.18 || rectH < h * 0.18) continue;
+
+              const aspect = rectW / rectH;
+              const aspectPenalty = Math.abs(aspect - targetAspect) * 900;
+              const edgeScore = l.score + r.score + t.score + b.score;
+
+              const marginPenalty =
+                Math.abs((l.index / w) - 0.15) * 30 +
+                Math.abs((1 - r.index / w) - 0.15) * 30 +
+                Math.abs((t.index / h) - 0.12) * 30 +
+                Math.abs((1 - b.index / h) - 0.12) * 30;
+
+              const centerX = (l.index + r.index) / 2 / w;
+              const centerY = (t.index + b.index) / 2 / h;
+              const centerPenalty = (Math.abs(centerX - 0.5) + Math.abs(centerY - 0.5)) * 80;
+
+              const score = edgeScore - aspectPenalty - marginPenalty - centerPenalty;
+
+              if (!best || score > best.score) {
+                best = {
+                  score,
+                  corners: [
+                    { x: l.index, y: t.index },
+                    { x: r.index, y: t.index },
+                    { x: r.index, y: b.index },
+                    { x: l.index, y: b.index }
+                  ],
+                  sampleWidth: w,
+                  sampleHeight: h
+                };
+              }
+            }
+          }
+        }
+      }
+
+      return best;
+    }
+
+    function mapDetectedCornersToPreview(detected) {
+      if (!detected || !image) return null;
+
+      const scale = Math.min(CANVAS_W / image.width, CANVAS_H / image.height);
+      const dw = image.width * scale;
+      const dh = image.height * scale;
+      const ox = (CANVAS_W - dw) / 2;
+      const oy = (CANVAS_H - dh) / 2;
+
+      const sx = dw / detected.sampleWidth;
+      const sy = dh / detected.sampleHeight;
+
+      return detected.corners.map(p => ({
+        x: ox + p.x * sx,
+        y: oy + p.y * sy
+      }));
+    }
+
+    function resetAdjustments() {
+      if (!image) return;
+      corners = getDefaultCorners(image);
+      brightnessInput.value = 0;
+      contrastInput.value = 0;
+      exposureInput.value = 0;
+      rotationInput.value = 0;
+      monoBgInput.checked = false;
+      faceGuideInput.checked = true;
+      updateValueLabels();
+      drawEditor();
+      setStatus("補正をリセットしました。");
+    }
+
+    function enableControls() {
+      autoDetectBtn.disabled = false;
+      resetBtn.disabled = false;
+      downloadBtn.disabled = false;
+    }
+
+    function handlePointerPos(e) {
+      const rect = editorCanvas.getBoundingClientRect();
+      const scaleX = editorCanvas.width / rect.width;
+      const scaleY = editorCanvas.height / rect.height;
+
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+      return {
+        x: (clientX - rect.left) * scaleX,
+        y: (clientY - rect.top) * scaleY
+      };
+    }
+
+    function pointerDown(e) {
+      if (!corners.length) return;
+      const p = handlePointerPos(e);
+      let found = null;
+
+      corners.forEach((c, i) => {
+        if (distance(c, p) <= HANDLE_RADIUS * 1.8) found = i;
+      });
+
+      activeCorner = found;
+      if (found !== null) e.preventDefault();
+      drawEditor();
+    }
+
+    function pointerMove(e) {
+      if (activeCorner === null) return;
+      const p = handlePointerPos(e);
+      corners[activeCorner] = {
+        x: clamp(p.x, 0, CANVAS_W),
+        y: clamp(p.y, 0, CANVAS_H)
+      };
+      e.preventDefault();
+      drawEditor();
+    }
+
+    function pointerUp() {
+      activeCorner = null;
+      drawEditor();
+    }
+
+    fileInput.addEventListener("change", async (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+
+      try {
+        image = await loadImageFromFile(file);
+        corners = getDefaultCorners(image);
+        enableControls();
+        updateValueLabels();
+        drawEditor();
+        setStatus("画像を読み込みました。必要なら四辺を自動検出してください。");
+      } catch (err) {
+        setStatus("画像の読み込みに失敗しました。");
+      }
+    });
+
+    autoDetectBtn.addEventListener("click", () => {
+      if (!image) return;
+      const detected = detectPhotoEdges(image);
+      const mapped = mapDetectedCornersToPreview(detected);
+
+      if (mapped) {
+        corners = mapped;
+        drawEditor();
+        setStatus("自動で四辺を検出しました。必要に応じて四隅を少し微調整してください。");
+      } else {
+        setStatus("自動検出が難しかったため、手動で四隅を合わせてください。");
+      }
+    });
+
+    resetBtn.addEventListener("click", resetAdjustments);
+
+    downloadBtn.addEventListener("click", () => {
+      if (!image) return;
+      drawPerspectiveCrop();
+      const a = document.createElement("a");
+      a.href = outputCanvas.toDataURL("image/png");
+      a.download = `id-photo-40x30mm-${dpi}dpi.png`;
+      a.click();
+      setStatus("PNGを書き出しました。");
+    });
+
+    [brightnessInput, contrastInput, exposureInput, rotationInput, faceGuideInput, monoBgInput].forEach(el => {
+      el.addEventListener("input", () => {
+        updateValueLabels();
+        drawEditor();
+      });
+      el.addEventListener("change", () => {
+        updateValueLabels();
+        drawEditor();
+      });
+    });
+
+    dpiButtons.forEach(btn => {
+      btn.addEventListener("click", () => {
+        dpi = Number(btn.dataset.dpi);
+        dpiButtons.forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        updateValueLabels();
+        drawEditor();
+      });
+    });
+
+    editorCanvas.addEventListener("mousedown", pointerDown);
+    editorCanvas.addEventListener("mousemove", pointerMove);
+    window.addEventListener("mouseup", pointerUp);
+
+    editorCanvas.addEventListener("touchstart", pointerDown, { passive: false });
+    editorCanvas.addEventListener("touchmove", pointerMove, { passive: false });
+    window.addEventListener("touchend", pointerUp);
+
+    updateValueLabels();
+    drawEditor();
+  </script>
+</body>
+</html>
