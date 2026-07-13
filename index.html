@@ -3,661 +3,470 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Photo Template Studio Ver.1.0</title>
+<title>Photo Template Studio Shop</title>
 <style>
-:root{
-  --bg:#f4f7fb;--card:#fff;--ink:#172033;--muted:#667085;--line:#d9e1ec;
-  --pri:#315efb;--pri2:#244bd8;--sec:#0f766e;--warn:#7a4c00;--soft:#eef3ff
-}
+:root{--bg:#f4f7fb;--card:#fff;--ink:#172033;--muted:#667085;--line:#d9e1ec;--pri:#315efb;--pri2:#244bd8;--sec:#0f766e;--warn:#7a4c00;--soft:#eef3ff}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Sans","Yu Gothic",sans-serif}
-.wrap{max-width:1220px;margin:auto;padding:16px}
-header,.card{background:var(--card);border:1px solid var(--line);border-radius:22px;box-shadow:0 10px 28px rgba(16,24,40,.06)}
-header{padding:22px;margin-bottom:16px}
-h1{font-size:clamp(24px,4vw,34px);margin:0 0 8px}
-h2{font-size:20px;margin:0 0 14px}
+.wrap{max-width:1240px;margin:auto;padding:14px}
+header,.card{background:#fff;border:1px solid var(--line);border-radius:20px;box-shadow:0 10px 28px rgba(16,24,40,.06)}
+header{padding:20px;margin-bottom:14px}
+h1{font-size:clamp(23px,4vw,34px);margin:0 0 6px}
+h2{font-size:19px;margin:0 0 12px}
 h3{font-size:16px;margin:0 0 10px}
 .small{font-size:13px;color:var(--muted);line-height:1.7}
-.grid{display:grid;grid-template-columns:1.18fr .82fr;gap:16px}
-.card{padding:16px;margin-bottom:16px}
-.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.grid{display:grid;grid-template-columns:1.2fr .8fr;gap:14px}
+.card{padding:15px;margin-bottom:14px}
+.row{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
 button,.fileBtn,input,select{font:inherit}
-button,.fileBtn{border:0;border-radius:14px;padding:11px 14px;min-height:44px;background:var(--pri);color:#fff;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;text-decoration:none}
+button,.fileBtn{border:0;border-radius:13px;padding:10px 13px;min-height:42px;background:var(--pri);color:#fff;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;text-decoration:none}
 button:hover,.fileBtn:hover{background:var(--pri2)}
-button.secondary{background:var(--sec)}
+button.secondary,.fileBtn.secondary{background:var(--sec)}
 button.outline{background:#fff;color:var(--ink);border:1px solid var(--line)}
 button.active{background:var(--pri);color:#fff}
+button.danger{background:#b42318}
 button:disabled{opacity:.45;cursor:not-allowed}
 input[type=file]{display:none}
-input[type=number],select{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:#fff;color:var(--ink)}
-input[type=checkbox]{width:18px;height:18px}
+input[type=number],input[type=text],select{border:1px solid var(--line);border-radius:11px;padding:9px 10px;background:#fff;color:var(--ink)}
 input[type=range]{width:100%}
-.modeTabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
-.infoGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.infoBox{padding:11px;border-radius:14px;background:#f8fafc;border:1px solid var(--line);font-size:13px;line-height:1.7}
-.previewGrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.previewBox{background:#eef2f7;border:1px solid var(--line);border-radius:18px;padding:10px;text-align:center}
-.previewTitle{font-weight:800;margin-bottom:8px}
+input[type=checkbox]{width:18px;height:18px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.infoGrid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.infoBox{padding:10px;border-radius:13px;background:#f8fafc;border:1px solid var(--line);font-size:13px;line-height:1.65}
+.editorWrap{position:sticky;top:8px;z-index:3}
+.previewBox{background:#eef2f7;border:1px solid var(--line);border-radius:17px;padding:10px;text-align:center}
 canvas.editor{display:block;width:100%;height:auto;background:#dfe6ef;border-radius:12px;touch-action:none}
-.control{border:1px solid var(--line);border-radius:16px;padding:13px;margin:11px 0;background:#fff}
-.labelrow{display:flex;justify-content:space-between;gap:10px;font-size:14px;font-weight:700;margin-bottom:8px}
-.actions{display:grid;gap:10px}
-.sheet{background:#fff;border:1px solid var(--line);border-radius:18px;padding:10px;overflow:auto}
+.control{border:1px solid var(--line);border-radius:15px;padding:12px;margin:10px 0;background:#fff}
+.labelrow{display:flex;justify-content:space-between;gap:8px;font-size:14px;font-weight:700;margin-bottom:7px}
+.photoList{display:grid;gap:9px}
+.photoItem{border:1px solid var(--line);border-radius:14px;padding:10px;background:#fff;display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center}
+.photoItem.active{border-color:var(--pri);box-shadow:0 0 0 2px rgba(49,94,251,.12)}
+.sheet{background:#fff;border:1px solid var(--line);border-radius:17px;padding:9px;overflow:auto}
 #sheetCanvas{display:block;max-width:100%;height:auto;margin:auto;background:#fff;box-shadow:0 6px 20px rgba(16,24,40,.08)}
-.notice{padding:13px 15px;border:1px solid #f2d28d;background:#fff8e7;border-radius:15px;color:var(--warn);font-size:13px;line-height:1.8}
+.notice{padding:12px 14px;border:1px solid #f2d28d;background:#fff8e7;border-radius:14px;color:var(--warn);font-size:13px;line-height:1.75}
 .success{padding:12px 14px;border:1px solid #a7ddc2;background:#ecfdf3;border-radius:14px;color:#166534;font-size:13px;line-height:1.7}
 .hidden{display:none!important}
-.stepper{display:grid;grid-template-columns:48px 90px 48px;gap:8px;align-items:center}
-.stepper input{text-align:center;width:90px}
-details{border:1px solid var(--line);border-radius:15px;padding:10px 12px;margin-top:12px}
-summary{cursor:pointer;font-weight:800}
-.toolbar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.toolbar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .toolbar button{width:100%}
-.sectionSoft{background:var(--soft);border:1px solid #d9e5ff;border-radius:16px;padding:12px}
-.status{margin-top:10px;font-size:13px;color:var(--muted)}
-@media(max-width:900px){.grid{grid-template-columns:1fr}}
-@media(max-width:560px){.previewGrid,.infoGrid,.toolbar{grid-template-columns:1fr}.wrap{padding:10px}.card,header{border-radius:17px}}
+.sectionSoft{background:var(--soft);border:1px solid #d9e5ff;border-radius:15px;padding:11px}
+.orderCard{border:1px solid var(--line);border-radius:15px;padding:11px;background:#fff;margin-bottom:9px}
+.orderTitle{font-weight:800}
+.status{margin-top:8px;font-size:13px;color:var(--muted)}
+@media(max-width:900px){.grid{grid-template-columns:1fr}.editorWrap{position:static}}
+@media(max-width:560px){.infoGrid,.toolbar{grid-template-columns:1fr}.wrap{padding:9px}.card,header{border-radius:16px}}
 @media print{
-  body{background:#fff}
-  body *{visibility:hidden}
-  #printArea,#printArea *{visibility:visible}
-  #printArea{position:absolute;left:0;top:0;width:210mm;height:297mm}
-  #sheetCanvas{width:210mm!important;height:297mm!important;box-shadow:none}
+ body{background:#fff}
+ body *{visibility:hidden}
+ #printArea,#printArea *{visibility:visible}
+ #printArea{position:absolute;left:0;top:0;width:210mm;height:297mm}
+ #sheetCanvas{width:210mm!important;height:297mm!important;box-shadow:none}
 }
 </style>
 </head>
 <body>
 <div class="wrap">
 <header>
-  <h1>Photo Template Studio <span class="small">Ver.1.0</span></h1>
-  <p class="small">写真をキーチェーン、証明写真、自由サイズに合わせてトリミングし、実寸で印刷できます。画像処理は端末内で完結します。</p>
+<h1>Photo Template Studio Shop</h1>
+<p class="small">相手側で写真を調整し、注文データを保存。ショップ側で読み込んで、そのまま一括印刷できます。画像は端末内で処理されます。</p>
 </header>
 
+<div class="tabs">
+<button id="customerTab" class="active">写真を調整する</button>
+<button id="shopTab" class="outline">ショップモード</button>
+</div>
+
+<div id="customerView">
 <div class="grid">
 <main>
 <section class="card">
-  <h2>1. テンプレート</h2>
-  <div class="modeTabs">
-    <button id="tabKeychain" class="active">キーチェーン</button>
-    <button id="tabId" class="outline">証明写真 40×30mm</button>
-    <button id="tabFree" class="outline">自由サイズ</button>
-  </div>
+<h2>1. テンプレート</h2>
+<div class="tabs">
+<button id="keychainMode" class="active">キーチェーン</button>
+<button id="idMode" class="outline">証明写真 40×30mm</button>
+<button id="freeMode" class="outline">自由サイズ</button>
+</div>
+<div id="keyInfo" class="infoGrid">
+<div class="infoBox"><strong>左側</strong><br>24×33mm</div>
+<div class="infoBox"><strong>右側</strong><br>24.5×33.5mm<br>縦・横切替可能</div>
+</div>
+<div id="idInfo" class="infoBox hidden"><strong>証明写真</strong><br>30×40mm</div>
+<div id="freeInfo" class="hidden">
+<div class="row">
+<label>横 <input id="freeW" type="number" min="5" max="200" step="0.1" value="30"> mm</label>
+<label>縦 <input id="freeH" type="number" min="5" max="200" step="0.1" value="40"> mm</label>
+<label>形状
+<select id="freeShape"><option value="rect">長方形</option><option value="oval">楕円</option></select>
+</label>
+</div>
+</div>
+</section>
 
-  <div id="keychainInfo" class="infoGrid">
-    <div class="infoBox"><strong>左側</strong><br>縦40mm × 横33mm<br>楕円形</div>
-    <div class="infoBox"><strong>右側</strong><br>縦33mm × 横24mm<br>縦・横切替対応</div>
-  </div>
+<section id="keychainSetup" class="card">
+<h2>2. キーチェーン写真</h2>
+<div class="sectionSoft">
+<h3>右側の共通写真</h3>
+<label class="fileBtn" for="commonFile">共通写真を選択</label>
+<input id="commonFile" type="file" accept="image/*">
+<div class="row" style="margin-top:10px">
+<button id="editCommon" class="outline">共通写真を調整</button>
+<button id="commonPortrait" class="outline active">縦</button>
+<button id="commonLandscape" class="outline">横</button>
+</div>
+</div>
 
-  <div id="idInfo" class="infoBox hidden">
-    <strong>証明写真</strong><br>縦40mm × 横30mm
-  </div>
+<div style="height:10px"></div>
+<div class="sectionSoft">
+<h3>左側の写真（2〜4枚）</h3>
+<div id="leftPhotoList" class="photoList"></div>
+<div class="row" style="margin-top:10px">
+<button id="addLeftPhoto">左側写真を追加</button>
+</div>
+</div>
+</section>
 
-  <div id="freeInfo" class="hidden">
-    <div class="row">
-      <label>横幅 <input id="freeW" type="number" min="5" max="200" step="0.1" value="30"> mm</label>
-      <label>縦幅 <input id="freeH" type="number" min="5" max="200" step="0.1" value="40"> mm</label>
-      <label>形状
-        <select id="freeShape">
-          <option value="rect">長方形</option>
-          <option value="oval">楕円</option>
-        </select>
-      </label>
-    </div>
-  </div>
+<section id="singleSetup" class="card hidden">
+<h2>2. 写真</h2>
+<label class="fileBtn" for="singleFile">写真を選択</label>
+<input id="singleFile" type="file" accept="image/*">
 </section>
 
 <section class="card">
-  <h2>2. 写真を選ぶ</h2>
+<h2>3. 調整データ</h2>
+<div class="row">
+<button id="saveOrder">注文データを保存</button>
+<label class="fileBtn secondary" for="loadOrderCustomer">注文データを読み込む</label>
+<input id="loadOrderCustomer" type="file" accept=".ptorder,.json,application/json">
+</div>
+<div id="customerStatus" class="status">写真・位置・拡大・回転・補正・枚数が保存されます。</div>
+</section>
+</main>
 
-  <div id="twoPhotoInputs" class="previewGrid">
-    <div>
-      <div class="previewTitle">左側の写真</div>
-      <label class="fileBtn" for="leftFile">左側を選択</label>
-      <input id="leftFile" type="file" accept="image/*">
-    </div>
-    <div>
-      <div class="previewTitle">右側の写真</div>
-      <label class="fileBtn" for="rightFile">右側を選択</label>
-      <input id="rightFile" type="file" accept="image/*">
-    </div>
-  </div>
+<aside>
+<section class="card editorWrap">
+<h2>写真を調整</h2>
+<div class="previewBox">
+<div id="editingBanner" style="display:inline-block;background:#315efb;color:#fff;padding:5px 10px;border-radius:999px;font-size:12px;font-weight:800;margin-bottom:8px">編集中</div>
+<div id="editorTitle" style="font-weight:800;margin-bottom:8px">右側の共通写真</div>
+<canvas id="editorCanvas" class="editor" width="660" height="800"></canvas>
+<div id="editorHint" class="small">写真をドラッグして位置を調整</div>
+</div>
 
-  <div id="singlePhotoInput" class="hidden">
-    <label class="fileBtn" for="singleFile">写真を選択</label>
-    <input id="singleFile" type="file" accept="image/*">
-  </div>
+<div class="control">
+<div class="labelrow"><span>拡大</span><span id="scaleVal">100%</span></div>
+<input id="scale" type="range" min="50" max="300" value="100">
+</div>
+<div class="control">
+<div class="labelrow"><span>回転</span><span id="rotVal">0°</span></div>
+<input id="rot" type="range" min="-180" max="180" value="0">
+</div>
+<div class="toolbar">
+<button id="rotate90" class="secondary">90°回転</button>
+<button id="flipH" class="outline">左右反転</button>
+<button id="resetEdit" class="outline">調整をリセット</button>
+</div>
+
+<details open>
+<summary>明るさ・色</summary>
+<div class="control">
+<div class="labelrow"><span>明るさ</span><span id="brightnessVal">0</span></div>
+<input id="brightness" type="range" min="-100" max="100" value="0">
+</div>
+<div class="control">
+<div class="labelrow"><span>コントラスト</span><span id="contrastVal">0</span></div>
+<input id="contrast" type="range" min="-100" max="100" value="0">
+</div>
+<div class="control">
+<div class="labelrow"><span>彩度</span><span id="saturationVal">0</span></div>
+<input id="saturation" type="range" min="-100" max="100" value="0">
+</div>
+</details>
+</section>
+</aside>
+</div>
+</div>
+
+<div id="shopView" class="hidden">
+<div class="grid">
+<main>
+<section class="card">
+<h2>ショップモード</h2>
+<div class="row">
+<label class="fileBtn secondary" for="shopLoadOrder">注文データを読み込む</label>
+<input id="shopLoadOrder" type="file" accept=".ptorder,.json,application/json" multiple>
+<button id="clearOrders" class="outline">一覧をクリア</button>
+</div>
+<div id="shopStatus" class="status">複数の注文データをまとめて読み込めます。</div>
 </section>
 
 <section class="card">
-  <h2>3. トリミングと写真調整</h2>
-
-  <div id="twoEditors" class="previewGrid">
-    <div class="previewBox">
-      <div class="previewTitle">左側</div>
-      <canvas id="leftCanvas" class="editor" width="660" height="800"></canvas>
-      <div class="small">ドラッグで位置調整</div>
-      <div class="control">
-        <div class="labelrow"><span>拡大</span><span id="leftScaleVal">100%</span></div>
-        <input id="leftScale" type="range" min="50" max="300" value="100">
-      </div>
-      <div class="control">
-        <div class="labelrow"><span>回転</span><span id="leftRotVal">0°</span></div>
-        <input id="leftRot" type="range" min="-180" max="180" value="0">
-      </div>
-      <div class="toolbar">
-        <button id="leftFlipH" class="outline">左右反転</button>
-        <button id="leftReset" class="outline">リセット</button>
-      </div>
-    </div>
-
-    <div class="previewBox">
-      <div class="previewTitle">右側</div>
-      <div class="modeTabs">
-        <button id="rightPortrait" class="outline active">縦</button>
-        <button id="rightLandscape" class="outline">横</button>
-      </div>
-      <canvas id="rightCanvas" class="editor" width="660" height="800"></canvas>
-      <div class="small">ドラッグで位置調整</div>
-      <div class="control">
-        <div class="labelrow"><span>拡大</span><span id="rightScaleVal">100%</span></div>
-        <input id="rightScale" type="range" min="50" max="300" value="100">
-      </div>
-      <div class="control">
-        <div class="labelrow"><span>回転</span><span id="rightRotVal">0°</span></div>
-        <input id="rightRot" type="range" min="-180" max="180" value="0">
-      </div>
-      <div class="toolbar">
-        <button id="rightRotate90" class="secondary">90°回転</button>
-        <button id="rightFlipH" class="outline">左右反転</button>
-        <button id="rightReset" class="outline">リセット</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="singleEditor" class="previewBox hidden">
-    <div class="previewTitle" id="singleTitle">証明写真 40×30mm</div>
-    <canvas id="singleCanvas" class="editor" width="660" height="800"></canvas>
-    <div class="small">ドラッグで位置調整</div>
-    <div class="control">
-      <div class="labelrow"><span>拡大</span><span id="singleScaleVal">100%</span></div>
-      <input id="singleScale" type="range" min="50" max="300" value="100">
-    </div>
-    <div class="control">
-      <div class="labelrow"><span>回転</span><span id="singleRotVal">0°</span></div>
-      <input id="singleRot" type="range" min="-180" max="180" value="0">
-    </div>
-    <div class="toolbar">
-      <button id="singleRotate90" class="secondary">90°回転</button>
-      <button id="singleFlipH" class="outline">左右反転</button>
-      <button id="singleReset" class="outline">リセット</button>
-    </div>
-  </div>
-
-  <details>
-    <summary>写真補正</summary>
-    <div class="control">
-      <div class="labelrow"><span>明るさ</span><span id="brightnessVal">0</span></div>
-      <input id="brightness" type="range" min="-100" max="100" value="0">
-    </div>
-    <div class="control">
-      <div class="labelrow"><span>コントラスト</span><span id="contrastVal">0</span></div>
-      <input id="contrast" type="range" min="-100" max="100" value="0">
-    </div>
-    <div class="control">
-      <div class="labelrow"><span>彩度</span><span id="saturationVal">0</span></div>
-      <input id="saturation" type="range" min="-100" max="100" value="0">
-    </div>
-  </details>
-
-  <details>
-    <summary>形と余白の微調整</summary>
-    <div class="control">
-      <div class="labelrow"><span>全体を小さくする</span><span id="shrinkVal">0.3mm</span></div>
-      <input id="shrink" type="range" min="0" max="1.2" step="0.1" value="0.3">
-    </div>
-
-    <div id="keychainFine">
-      <div class="control">
-        <div class="labelrow"><span>左側の楕円らしさ</span><span id="leftOvalVal">96%</span></div>
-        <input id="leftOval" type="range" min="75" max="100" value="96">
-      </div>
-      <div class="control">
-        <div class="labelrow"><span>右側の楕円らしさ</span><span id="rightOvalVal">98%</span></div>
-        <input id="rightOval" type="range" min="75" max="100" value="98">
-      </div>
-    </div>
-  </details>
-</section>
-
-<section class="card">
-  <h2>4. 調整データの保存・読み込み</h2>
-  <div class="sectionSoft">
-    <div class="row">
-      <button id="saveProject">プロジェクトを保存</button>
-      <label class="fileBtn secondary" for="loadProject">プロジェクトを読み込む</label>
-      <input id="loadProject" type="file" accept=".ptstudio,.json,application/json">
-    </div>
-    <div id="projectStatus" class="status">写真・位置・拡大率・回転・補正・テンプレート設定を1つのファイルに保存できます。</div>
-  </div>
+<h2>一括印刷リスト</h2>
+<div id="orderList"></div>
 </section>
 </main>
 
 <aside>
 <section class="card">
-  <h2>5. 印刷シート</h2>
-
-  <div class="control">
-    <div class="labelrow"><span>セット数 / 枚数</span><span id="copiesVal">4</span></div>
-    <div class="stepper">
-      <button id="copiesMinus" class="outline" type="button">−</button>
-      <input id="copiesInput" type="number" min="1" max="30" value="4">
-      <button id="copiesPlus" class="outline" type="button">＋</button>
-    </div>
-  </div>
-
-  <div class="row" style="margin-bottom:10px">
-    <label><input id="cutLine" type="checkbox" checked> カット線</label>
-    <label><input id="labels" type="checkbox" checked> ラベル</label>
-  </div>
-
-  <div id="printArea" class="sheet">
-    <canvas id="sheetCanvas" width="1240" height="1754"></canvas>
-  </div>
-
-  <div class="actions" style="margin-top:12px">
-    <button id="downloadSheet">A4印刷用PNGを保存</button>
-    <button id="printBtn" class="secondary">このシートを印刷</button>
-  </div>
-
-  <p class="small">印刷時は「実際のサイズ」「100%」を選び、「用紙に合わせる」はオフにしてください。</p>
-</section>
-
-<div class="notice">
-  <strong>共有方法</strong><br>
-  写真を調整した人が「プロジェクトを保存」でファイルを作り、印刷する人へ送ります。受け取った側は「プロジェクトを読み込む」だけで、同じ状態を再現できます。
+<h2>A4印刷シート</h2>
+<div class="row" style="margin-bottom:10px">
+<label><input id="cutLine" type="checkbox" checked> カット線</label>
+<label><input id="labels" type="checkbox" checked> ラベル</label>
 </div>
-
-<div class="success" style="margin-top:12px">
-  <strong>おすすめ</strong><br>
-  最初は普通紙で試し刷りし、実物へ当ててからシール用紙や写真用紙へ印刷してください。
+<div id="printArea" class="sheet">
+<canvas id="sheetCanvas" width="1240" height="1754"></canvas>
+</div>
+<div class="row" style="margin-top:10px">
+<button id="downloadSheet">A4 PNGを保存</button>
+<button id="printSheet" class="secondary">このシートを印刷</button>
+</div>
+<p class="small">印刷時は「実際のサイズ」「100%」を選び、「用紙に合わせる」はオフにしてください。</p>
+</section>
+<div class="notice">
+<strong>運用</strong><br>
+相手は「写真を調整する」で注文データを保存し、LINEやメールで送付します。ショップ側は複数ファイルを読み込み、セット単位で一括配置して印刷します。
 </div>
 </aside>
+</div>
 </div>
 </div>
 
 <script>
 const $=id=>document.getElementById(id);
-const MM_TO_SHEET=1240/210;
-
+const MM=1240/210;
+const clone=o=>JSON.parse(JSON.stringify(o));
+const emptyEdit=()=>({img:null,imgData:null,x:0,y:0,scale:1,rot:0,flipH:false,brightness:0,contrast:0,saturation:0,qty:1});
 const state={
-  mode:'keychain',
-  left:{img:null,imgData:null,x:0,y:0,scale:1,rot:0,flipH:false},
-  right:{img:null,imgData:null,x:0,y:0,scale:1,rot:0,flipH:false,landscape:false},
-  single:{img:null,imgData:null,x:0,y:0,scale:1,rot:0,flipH:false},
-  shrink:.3,leftOval:.96,rightOval:.98,copies:4,
-  freeW:30,freeH:40,freeShape:'rect',
-  brightness:0,contrast:0,saturation:0
+ view:'customer',mode:'keychain',active:{type:'common',index:-1},
+ common:{...emptyEdit(),landscape:false},
+ lefts:[emptyEdit(),emptyEdit()],
+ single:emptyEdit(),freeW:30,freeH:40,freeShape:'rect',
+ orders:[]
 };
 
-function fileToDataURL(file){
-  return new Promise((resolve,reject)=>{
-    const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=reject;r.readAsDataURL(file);
-  });
-}
-function imageFromDataURL(data){
-  return new Promise((resolve,reject)=>{
-    const im=new Image();im.onload=()=>resolve(im);im.onerror=reject;im.src=data;
-  });
-}
-async function loadFile(file,side){
-  const data=await fileToDataURL(file);
-  state[side].imgData=data;
-  state[side].img=await imageFromDataURL(data);
-  resetSide(side);
-  renderAll();
-}
-$('leftFile').onchange=e=>e.target.files[0]&&loadFile(e.target.files[0],'left');
-$('rightFile').onchange=e=>e.target.files[0]&&loadFile(e.target.files[0],'right');
-$('singleFile').onchange=e=>e.target.files[0]&&loadFile(e.target.files[0],'single');
+function dataURL(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(file)})}
+function imgFrom(data){return new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=data})}
+async function loadInto(edit,file){edit.imgData=await dataURL(file);edit.img=await imgFrom(edit.imgData);renderAll()}
 
-function resetSide(side){
-  Object.assign(state[side],{x:0,y:0,scale:1,rot:0,flipH:false});
-  $(side+'Scale').value=100;
-  $(side+'Rot').value=0;
-  updateLabels();
+function activeEdit(){
+ if(state.mode!=='keychain')return state.single;
+ if(state.active.type==='common')return state.common;
+ return state.lefts[state.active.index];
 }
-$('leftReset').onclick=()=>{resetSide('left');renderAll()};
-$('rightReset').onclick=()=>{resetSide('right');renderAll()};
-$('singleReset').onclick=()=>{resetSide('single');renderAll()};
-$('leftFlipH').onclick=()=>{state.left.flipH=!state.left.flipH;renderAll()};
-$('rightFlipH').onclick=()=>{state.right.flipH=!state.right.flipH;renderAll()};
-$('singleFlipH').onclick=()=>{state.single.flipH=!state.single.flipH;renderAll()};
-$('rightRotate90').onclick=()=>{state.right.rot=(state.right.rot+90)%360;$('rightRot').value=state.right.rot;updateLabels();renderAll()};
-$('singleRotate90').onclick=()=>{state.single.rot=(state.single.rot+90)%360;$('singleRot').value=state.single.rot;updateLabels();renderAll()};
-
-function rectPath(ctx,x,y,w,h){ctx.beginPath();ctx.rect(x,y,w,h);ctx.closePath()}
-function ellipsePath(ctx,x,y,w,h,ovalness=1){
-  const k=0.5522847498,rx=w/2,ry=h/2,cx=x+rx,cy=y+ry;
-  const flat=Math.max(0,1-ovalness),topFlat=rx*flat*.22,sideFlat=ry*flat*.12;
-  ctx.beginPath();
-  ctx.moveTo(cx-topFlat,y);
-  ctx.bezierCurveTo(cx-rx*k,y,x,cy-ry*k,x,cy-sideFlat);
-  ctx.lineTo(x,cy+sideFlat);
-  ctx.bezierCurveTo(x,cy+ry*k,cx-rx*k,y+h,cx-topFlat,y+h);
-  ctx.lineTo(cx+topFlat,y+h);
-  ctx.bezierCurveTo(cx+rx*k,y+h,x+w,cy+ry*k,x+w,cy+sideFlat);
-  ctx.lineTo(x+w,cy-sideFlat);
-  ctx.bezierCurveTo(x+w,cy-ry*k,cx+rx*k,y,cx+topFlat,y);
-  ctx.closePath();
+function activeTitle(){
+ if(state.mode==='id')return '証明写真';
+ if(state.mode==='free')return '自由サイズ';
+ return state.active.type==='common'?'右側の共通写真':`左側の写真 ${state.active.index+1}`;
 }
-function singleSpec(){
-  if(state.mode==='id') return {w:30,h:40,shape:'rect',label:'証明写真'};
-  return {w:state.freeW,h:state.freeH,shape:state.freeShape,label:'自由サイズ'};
+function dimsForActive(){
+ if(state.mode==='id')return {w:30,h:40,shape:'rect'};
+ if(state.mode==='free')return {w:state.freeW,h:state.freeH,shape:state.freeShape};
+ if(state.active.type==='common')return state.common.landscape?{w:33.5,h:24.5,shape:'oval'}:{w:24.5,h:33.5,shape:'oval'};
+ return {w:24,h:33,shape:'oval'};
 }
-function applyShape(ctx,side,x,y,w,h){
-  if(side==='left')ellipsePath(ctx,x,y,w,h,state.leftOval);
-  else if(side==='right')ellipsePath(ctx,x,y,w,h,state.rightOval);
-  else{
-    const sp=singleSpec();
-    if(sp.shape==='oval')ellipsePath(ctx,x,y,w,h,1);
-    else rectPath(ctx,x,y,w,h);
+function path(ctx,x,y,w,h,shape){
+ if(shape==='rect'){ctx.beginPath();ctx.rect(x,y,w,h);ctx.closePath();return}
+ const k=.5522847498,rx=w/2,ry=h/2,cx=x+rx,cy=y+ry;
+ ctx.beginPath();ctx.moveTo(cx,y);
+ ctx.bezierCurveTo(cx+rx*k,y,x+w,cy-ry*k,x+w,cy);
+ ctx.bezierCurveTo(x+w,cy+ry*k,cx+rx*k,y+h,cx,y+h);
+ ctx.bezierCurveTo(cx-rx*k,y+h,x,cy+ry*k,x,cy);
+ ctx.bezierCurveTo(x,cy-ry*k,cx-rx*k,y,cx,y);ctx.closePath();
+}
+function filter(edit){return `brightness(${100+edit.brightness}%) contrast(${100+edit.contrast}%) saturate(${100+edit.saturation}%)`}
+function drawEditor(){
+ const c=$('editorCanvas'),ctx=c.getContext('2d'),e=activeEdit(),d=dimsForActive();
+ ctx.clearRect(0,0,c.width,c.height);ctx.fillStyle='#dfe6ef';ctx.fillRect(0,0,c.width,c.height);
+ const pad=50,sc=Math.min((c.width-pad*2)/d.w,(c.height-pad*2)/d.h),w=d.w*sc,h=d.h*sc,x=(c.width-w)/2,y=(c.height-h)/2;
+ ctx.save();path(ctx,x,y,w,h,d.shape);ctx.clip();
+ if(e.img){
+  const base=Math.max(w/e.img.width,h/e.img.height)*e.scale;
+  ctx.filter=filter(e);ctx.translate(x+w/2+e.x,y+h/2+e.y);ctx.rotate(e.rot*Math.PI/180);ctx.scale(e.flipH?-1:1,1);
+  ctx.drawImage(e.img,-e.img.width*base/2,-e.img.height*base/2,e.img.width*base,e.img.height*base);
+ }else{
+  ctx.fillStyle='#eef2f7';ctx.fillRect(x,y,w,h);ctx.fillStyle='#64748b';ctx.font='22px sans-serif';ctx.textAlign='center';ctx.fillText('写真を選択してください',x+w/2,y+h/2);
+ }
+ ctx.restore();
+ ctx.save();ctx.strokeStyle='#315efb';ctx.lineWidth=4;ctx.setLineDash([10,7]);path(ctx,x,y,w,h,d.shape);ctx.stroke();ctx.restore();
+ $('editorTitle').textContent=activeTitle();
+ $('editorHint').textContent=`現在「${activeTitle()}」を編集中です。写真をドラッグして位置を調整してください。`;
+ $('scale').value=e.scale*100;$('rot').value=e.rot;$('brightness').value=e.brightness;$('contrast').value=e.contrast;$('saturation').value=e.saturation;
+ $('scaleVal').textContent=Math.round(e.scale*100)+'%';$('rotVal').textContent=Math.round(e.rot)+'°';
+ $('brightnessVal').textContent=e.brightness;$('contrastVal').textContent=e.contrast;$('saturationVal').textContent=e.saturation;
+}
+function renderLeftList(){
+ const box=$('leftPhotoList');box.innerHTML='';
+ state.lefts.forEach((e,i)=>{
+  const row=document.createElement('div');row.className='photoItem'+(state.active.type==='left'&&state.active.index===i?' active':'');
+  const left=document.createElement('div');
+  const editing=state.active.type==='left'&&state.active.index===i;
+  left.innerHTML=`<strong>左側写真 ${i+1}${editing?'（編集中）':''}</strong><div class="small">${e.imgData?'選択済み':'未選択'} / ${e.qty}セット</div>`;
+  const controls=document.createElement('div');controls.className='row';
+  const choose=document.createElement('label');choose.className='fileBtn';choose.textContent='選択';
+  const input=document.createElement('input');input.type='file';input.accept='image/*';
+  input.onchange=async ev=>{if(ev.target.files[0]){state.active={type:'left',index:i};await loadInto(e,ev.target.files[0]);}};
+  choose.appendChild(input);
+  const edit=document.createElement('button');
+  edit.className=editing?'active':'outline';
+  edit.textContent=editing?'編集中':'この写真を調整';
+  edit.onclick=()=>{state.active={type:'left',index:i};renderAll()};
+  const minus=document.createElement('button');minus.className='outline';minus.textContent='−';minus.onclick=()=>{e.qty=Math.max(1,e.qty-1);renderAll()};
+  const plus=document.createElement('button');plus.className='outline';plus.textContent='＋';plus.onclick=()=>{e.qty=Math.min(20,e.qty+1);renderAll()};
+  controls.append(choose,edit,minus,plus);
+  if(state.lefts.length>2){
+   const del=document.createElement('button');del.className='danger';del.textContent='削除';
+   del.onclick=()=>{state.lefts.splice(i,1);state.active={type:'common',index:-1};renderAll()};
+   controls.appendChild(del);
   }
-}
-function cssFilter(){
-  return `brightness(${100+state.brightness}%) contrast(${100+state.contrast}%) saturate(${100+state.saturation}%)`;
-}
-function drawPlaceholder(ctx,w,h,text){
-  ctx.fillStyle='#dfe6ef';ctx.fillRect(0,0,w,h);
-  ctx.fillStyle='#64748b';ctx.font='24px sans-serif';ctx.textAlign='center';
-  ctx.fillText(text,w/2,h/2);
-}
-function getDims(side){
-  if(side==='left')return {w:33,h:40};
-  if(side==='right')return state.right.landscape?{w:33,h:24}:{w:24,h:33};
-  return singleSpec();
-}
-function drawPhotoCanvas(canvas,side){
-  const ctx=canvas.getContext('2d'),s=state[side],cw=canvas.width,ch=canvas.height;
-  ctx.clearRect(0,0,cw,ch);drawPlaceholder(ctx,cw,ch,'写真を選択してください');
-  const d=getDims(side);
-  const pad=48,sc=Math.min((cw-pad*2)/d.w,(ch-pad*2)/d.h);
-  const w=d.w*sc,h=d.h*sc,x=(cw-w)/2,y=(ch-h)/2;
-
-  ctx.save();applyShape(ctx,side,x,y,w,h);ctx.clip();
-  if(s.img){
-    const base=Math.max(w/s.img.width,h/s.img.height)*s.scale;
-    ctx.filter=cssFilter();
-    ctx.translate(x+w/2+s.x,y+h/2+s.y);
-    ctx.rotate(s.rot*Math.PI/180);
-    ctx.scale(s.flipH?-1:1,1);
-    ctx.drawImage(s.img,-s.img.width*base/2,-s.img.height*base/2,s.img.width*base,s.img.height*base);
-  }else{
-    ctx.fillStyle='#dfe6ef';ctx.fillRect(x,y,w,h);
-  }
-  ctx.restore();
-
-  ctx.save();ctx.strokeStyle='#315efb';ctx.lineWidth=4;ctx.setLineDash([10,7]);
-  applyShape(ctx,side,x,y,w,h);ctx.stroke();ctx.restore();
-}
-function renderPiece(ctx,side,x,y,mmW,mmH){
-  const s=state[side],sh=state.shrink;
-  const w=Math.max(1,(mmW-sh)*MM_TO_SHEET),h=Math.max(1,(mmH-sh)*MM_TO_SHEET);
-
-  ctx.save();applyShape(ctx,side,x,y,w,h);ctx.clip();ctx.fillStyle='#fff';ctx.fillRect(x,y,w,h);
-  if(s.img){
-    const base=Math.max(w/s.img.width,h/s.img.height)*s.scale;
-    const editorScale=Math.min((660-96)/mmW,(800-96)/mmH);
-    const ratio=w/(mmW*editorScale);
-    ctx.filter=cssFilter();
-    ctx.translate(x+w/2+s.x*ratio,y+h/2+s.y*ratio);
-    ctx.rotate(s.rot*Math.PI/180);
-    ctx.scale(s.flipH?-1:1,1);
-    ctx.drawImage(s.img,-s.img.width*base/2,-s.img.height*base/2,s.img.width*base,s.img.height*base);
-  }
-  ctx.restore();
-
-  if($('cutLine').checked){
-    ctx.save();ctx.strokeStyle='#7b8798';ctx.lineWidth=1.2;ctx.setLineDash([5,4]);
-    applyShape(ctx,side,x,y,w,h);ctx.stroke();ctx.restore();
-  }
-  return {w,h};
-}
-function renderSheet(){
-  const c=$('sheetCanvas'),ctx=c.getContext('2d');
-  ctx.filter='none';ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);
-
-  const margin=15*MM_TO_SHEET,gap=8*MM_TO_SHEET,rowGap=12*MM_TO_SHEET;
-  let x=margin,y=margin;
-
-  if(state.mode==='keychain'){
-    for(let i=0;i<state.copies;i++){
-      const rd=getDims('right');
-      const lw=(33-state.shrink)*MM_TO_SHEET,lh=(40-state.shrink)*MM_TO_SHEET;
-      const rw=(rd.w-state.shrink)*MM_TO_SHEET,rh=(rd.h-state.shrink)*MM_TO_SHEET;
-      const setW=lw+gap+rw,setH=Math.max(lh,rh);
-
-      if(x+setW>c.width-margin){x=margin;y+=setH+rowGap}
-      if(y+setH>c.height-margin)break;
-
-      const a=renderPiece(ctx,'left',x,y,33,40);
-      const b=renderPiece(ctx,'right',x+a.w+gap,y,rd.w,rd.h);
-
-      if($('labels').checked){
-        ctx.fillStyle='#526071';ctx.font='18px sans-serif';ctx.textAlign='center';
-        ctx.fillText('左',x+a.w/2,y+a.h+22);
-        ctx.fillText('右',x+a.w+gap+b.w/2,y+b.h+22);
-      }
-      x+=setW+gap;
-    }
-  }else{
-    const sp=singleSpec();
-    const iw=(sp.w-state.shrink)*MM_TO_SHEET,ih=(sp.h-state.shrink)*MM_TO_SHEET;
-
-    for(let i=0;i<state.copies;i++){
-      if(x+iw>c.width-margin){x=margin;y+=ih+rowGap}
-      if(y+ih>c.height-margin)break;
-
-      const a=renderPiece(ctx,'single',x,y,sp.w,sp.h);
-
-      if($('labels').checked){
-        ctx.fillStyle='#526071';ctx.font='18px sans-serif';ctx.textAlign='center';
-        ctx.fillText(sp.label,x+a.w/2,y+a.h+22);
-      }
-      x+=iw+gap;
-    }
-  }
-}
-function renderAll(){
-  if(state.mode==='keychain'){
-    drawPhotoCanvas($('leftCanvas'),'left');
-    drawPhotoCanvas($('rightCanvas'),'right');
-  }else{
-    drawPhotoCanvas($('singleCanvas'),'single');
-  }
-  renderSheet();
-}
-function updateLabels(){
-  ['left','right','single'].forEach(side=>{
-    $(side+'ScaleVal').textContent=Math.round(state[side].scale*100)+'%';
-    $(side+'RotVal').textContent=Math.round(state[side].rot)+'°';
-  });
-  $('shrinkVal').textContent=state.shrink.toFixed(1)+'mm';
-  $('leftOvalVal').textContent=Math.round(state.leftOval*100)+'%';
-  $('rightOvalVal').textContent=Math.round(state.rightOval*100)+'%';
-  $('brightnessVal').textContent=state.brightness;
-  $('contrastVal').textContent=state.contrast;
-  $('saturationVal').textContent=state.saturation;
-  $('copiesVal').textContent=state.copies;
-  $('copiesInput').value=state.copies;
+  row.append(left,controls);box.appendChild(row);
+ });
 }
 function setMode(mode){
-  state.mode=mode;
-  ['tabKeychain','tabId','tabFree'].forEach(id=>{$(id).classList.remove('active');$(id).classList.add('outline')});
-  const active=mode==='keychain'?'tabKeychain':mode==='id'?'tabId':'tabFree';
-  $(active).classList.add('active');
-
-  $('keychainInfo').classList.toggle('hidden',mode!=='keychain');
-  $('idInfo').classList.toggle('hidden',mode!=='id');
-  $('freeInfo').classList.toggle('hidden',mode!=='free');
-  $('twoPhotoInputs').classList.toggle('hidden',mode!=='keychain');
-  $('singlePhotoInput').classList.toggle('hidden',mode==='keychain');
-  $('twoEditors').classList.toggle('hidden',mode!=='keychain');
-  $('singleEditor').classList.toggle('hidden',mode==='keychain');
-  $('keychainFine').classList.toggle('hidden',mode!=='keychain');
-  $('singleTitle').textContent=mode==='id'?'証明写真 40×30mm':'自由サイズ';
-
-  renderAll();
+ state.mode=mode;
+ ['keychainMode','idMode','freeMode'].forEach(id=>{$(id).classList.remove('active');$(id).classList.add('outline')});
+ $(mode==='keychain'?'keychainMode':mode==='id'?'idMode':'freeMode').classList.add('active');
+ $('keyInfo').classList.toggle('hidden',mode!=='keychain');
+ $('idInfo').classList.toggle('hidden',mode!=='id');
+ $('freeInfo').classList.toggle('hidden',mode!=='free');
+ $('keychainSetup').classList.toggle('hidden',mode!=='keychain');
+ $('singleSetup').classList.toggle('hidden',mode==='keychain');
+ state.active=mode==='keychain'?{type:'common',index:-1}:{type:'single',index:-1};
+ renderAll();
+}
+function renderAll(){
+ renderLeftList();
+ if($('editCommon')){
+  $('editCommon').classList.toggle('active',state.active.type==='common');
+  $('editCommon').classList.toggle('outline',state.active.type!=='common');
+  $('editCommon').textContent=state.active.type==='common'?'共通写真を編集中':'共通写真を調整';
+ }
+ drawEditor();
 }
 
-$('tabKeychain').onclick=()=>setMode('keychain');
-$('tabId').onclick=()=>setMode('id');
-$('tabFree').onclick=()=>setMode('free');
-
-['left','right','single'].forEach(side=>{
-  $(side+'Scale').oninput=e=>{state[side].scale=e.target.value/100;updateLabels();renderAll()};
-  $(side+'Rot').oninput=e=>{state[side].rot=+e.target.value;updateLabels();renderAll()};
-
-  const c=$(side+'Canvas');let dragging=false,last=null;
-  const pos=e=>{const r=c.getBoundingClientRect(),p=e.touches?e.touches[0]:e;return{x:(p.clientX-r.left)*c.width/r.width,y:(p.clientY-r.top)*c.height/r.height}};
-  const down=e=>{dragging=true;last=pos(e);e.preventDefault()};
-  const move=e=>{if(!dragging)return;const p=pos(e);state[side].x+=p.x-last.x;state[side].y+=p.y-last.y;last=p;renderAll();e.preventDefault()};
-  const up=()=>{dragging=false};
-
-  c.addEventListener('mousedown',down);
-  c.addEventListener('mousemove',move);
-  window.addEventListener('mouseup',up);
-  c.addEventListener('touchstart',down,{passive:false});
-  c.addEventListener('touchmove',move,{passive:false});
-  window.addEventListener('touchend',up);
-});
-
-$('rightPortrait').onclick=()=>{
-  state.right.landscape=false;
-  $('rightPortrait').classList.add('active');
-  $('rightLandscape').classList.remove('active');
-  renderAll();
-};
-$('rightLandscape').onclick=()=>{
-  state.right.landscape=true;
-  $('rightLandscape').classList.add('active');
-  $('rightPortrait').classList.remove('active');
-  renderAll();
-};
-
+$('keychainMode').onclick=()=>setMode('keychain');
+$('idMode').onclick=()=>setMode('id');
+$('freeMode').onclick=()=>setMode('free');
+$('commonFile').onchange=async e=>{if(e.target.files[0]){state.active={type:'common',index:-1};await loadInto(state.common,e.target.files[0]);}};
+$('singleFile').onchange=async e=>{if(e.target.files[0]){state.active={type:'single',index:-1};await loadInto(state.single,e.target.files[0]);}};
+$('editCommon').onclick=()=>{state.active={type:'common',index:-1};renderAll()};
+$('commonPortrait').onclick=()=>{state.common.landscape=false;$('commonPortrait').classList.add('active');$('commonLandscape').classList.remove('active');state.active={type:'common',index:-1};renderAll()};
+$('commonLandscape').onclick=()=>{state.common.landscape=true;$('commonLandscape').classList.add('active');$('commonPortrait').classList.remove('active');state.active={type:'common',index:-1};renderAll()};
+$('addLeftPhoto').onclick=()=>{if(state.lefts.length<4){state.lefts.push(emptyEdit());renderAll()}};
 $('freeW').oninput=e=>{state.freeW=Math.max(5,+e.target.value||30);renderAll()};
 $('freeH').oninput=e=>{state.freeH=Math.max(5,+e.target.value||40);renderAll()};
 $('freeShape').onchange=e=>{state.freeShape=e.target.value;renderAll()};
 
-$('shrink').oninput=e=>{state.shrink=+e.target.value;updateLabels();renderAll()};
-$('leftOval').oninput=e=>{state.leftOval=e.target.value/100;updateLabels();renderAll()};
-$('rightOval').oninput=e=>{state.rightOval=e.target.value/100;updateLabels();renderAll()};
-$('brightness').oninput=e=>{state.brightness=+e.target.value;updateLabels();renderAll()};
-$('contrast').oninput=e=>{state.contrast=+e.target.value;updateLabels();renderAll()};
-$('saturation').oninput=e=>{state.saturation=+e.target.value;updateLabels();renderAll()};
+['scale','rot','brightness','contrast','saturation'].forEach(id=>{
+ $(id).oninput=e=>{const a=activeEdit();a[id==='scale'?'scale':id==='rot'?'rot':id]=id==='scale'?+e.target.value/100:+e.target.value;renderAll()}
+});
+$('rotate90').onclick=()=>{const a=activeEdit();a.rot=(a.rot+90)%360;renderAll()};
+$('flipH').onclick=()=>{const a=activeEdit();a.flipH=!a.flipH;renderAll()};
+$('resetEdit').onclick=()=>{const a=activeEdit();Object.assign(a,{x:0,y:0,scale:1,rot:0,flipH:false,brightness:0,contrast:0,saturation:0});renderAll()};
 
-function setCopies(v){
-  state.copies=Math.max(1,Math.min(30,Math.round(v||1)));
-  updateLabels();renderAll();
+const ec=$('editorCanvas');let dragging=false,last=null;
+function pos(ev){const r=ec.getBoundingClientRect(),p=ev.touches?ev.touches[0]:ev;return{x:(p.clientX-r.left)*ec.width/r.width,y:(p.clientY-r.top)*ec.height/r.height}}
+function down(ev){dragging=true;last=pos(ev);ev.preventDefault()}
+function move(ev){if(!dragging)return;const p=pos(ev),a=activeEdit();a.x+=p.x-last.x;a.y+=p.y-last.y;last=p;renderAll();ev.preventDefault()}
+function up(){dragging=false}
+ec.addEventListener('mousedown',down);ec.addEventListener('mousemove',move);window.addEventListener('mouseup',up);
+ec.addEventListener('touchstart',down,{passive:false});ec.addEventListener('touchmove',move,{passive:false});window.addEventListener('touchend',up);
+
+function serialEdit(e){return {...e,img:null}}
+function buildOrder(){
+ return {
+  app:'Photo Template Studio Shop',version:1,savedAt:new Date().toISOString(),
+  mode:state.mode,freeW:state.freeW,freeH:state.freeH,freeShape:state.freeShape,
+  common:serialEdit(state.common),lefts:state.lefts.map(serialEdit),single:serialEdit(state.single)
+ };
 }
-$('copiesMinus').onclick=()=>setCopies(state.copies-1);
-$('copiesPlus').onclick=()=>setCopies(state.copies+1);
-$('copiesInput').oninput=e=>{if(e.target.value!=='')setCopies(+e.target.value)};
-
-$('cutLine').onchange=renderAll;
-$('labels').onchange=renderAll;
-
-$('downloadSheet').onclick=()=>{
-  renderSheet();
-  const a=document.createElement('a');
-  a.download='photo-template-studio-A4.png';
-  a.href=$('sheetCanvas').toDataURL('image/png');
-  a.click();
-};
-$('printBtn').onclick=()=>{renderSheet();window.print()};
-
-function exportProject(){
-  const payload={
-    version:'1.0',
-    app:'Photo Template Studio',
-    savedAt:new Date().toISOString(),
-    state:{
-      mode:state.mode,shrink:state.shrink,leftOval:state.leftOval,rightOval:state.rightOval,
-      copies:state.copies,freeW:state.freeW,freeH:state.freeH,freeShape:state.freeShape,
-      brightness:state.brightness,contrast:state.contrast,saturation:state.saturation,
-      left:{...state.left,img:null},
-      right:{...state.right,img:null},
-      single:{...state.single,img:null}
-    }
-  };
-  const blob=new Blob([JSON.stringify(payload)],{type:'application/json'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=url;a.download='photo-template-project.ptstudio';a.click();
-  setTimeout(()=>URL.revokeObjectURL(url),1000);
-  $('projectStatus').textContent='プロジェクトを保存しました。';
+function downloadJSON(obj,name){
+ const b=new Blob([JSON.stringify(obj)],{type:'application/json'}),u=URL.createObjectURL(b),a=document.createElement('a');
+ a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),1000);
 }
+$('saveOrder').onclick=()=>{downloadJSON(buildOrder(),'photo-template-order.ptorder');$('customerStatus').textContent='注文データを保存しました。'};
+async function hydrateOrder(o){
+ for(const key of ['common','single']){
+  if(o[key]?.imgData)o[key].img=await imgFrom(o[key].imgData);
+ }
+ if(o.lefts)for(const e of o.lefts)if(e.imgData)e.img=await imgFrom(e.imgData);
+ return o;
+}
+async function loadCustomer(file){
+ try{
+  const o=await hydrateOrder(JSON.parse(await file.text()));
+  state.mode=o.mode||'keychain';state.freeW=o.freeW||30;state.freeH=o.freeH||40;state.freeShape=o.freeShape||'rect';
+  state.common=Object.assign(emptyEdit(),o.common||{});state.lefts=(o.lefts||[emptyEdit(),emptyEdit()]).map(e=>Object.assign(emptyEdit(),e));
+  while(state.lefts.length<2)state.lefts.push(emptyEdit());
+  state.single=Object.assign(emptyEdit(),o.single||{});setMode(state.mode);$('customerStatus').textContent='注文データを読み込みました。';
+ }catch{$('customerStatus').textContent='読み込みに失敗しました。'}
+}
+$('loadOrderCustomer').onchange=e=>e.target.files[0]&&loadCustomer(e.target.files[0]);
 
-async function importProject(file){
-  try{
-    const payload=JSON.parse(await file.text());
-    const p=payload.state;
-    if(!p)throw new Error('invalid');
+$('customerTab').onclick=()=>{$('customerView').classList.remove('hidden');$('shopView').classList.add('hidden');$('customerTab').classList.add('active');$('shopTab').classList.remove('active')};
+$('shopTab').onclick=()=>{$('shopView').classList.remove('hidden');$('customerView').classList.add('hidden');$('shopTab').classList.add('active');$('customerTab').classList.remove('active');renderShop()};
 
-    state.mode=p.mode||'keychain';
-    state.shrink=p.shrink??.3;
-    state.leftOval=p.leftOval??.96;
-    state.rightOval=p.rightOval??.98;
-    state.copies=p.copies??4;
-    state.freeW=p.freeW??30;
-    state.freeH=p.freeH??40;
-    state.freeShape=p.freeShape||'rect';
-    state.brightness=p.brightness??0;
-    state.contrast=p.contrast??0;
-    state.saturation=p.saturation??0;
+async function addOrders(files){
+ for(const f of files){
+  try{const o=await hydrateOrder(JSON.parse(await f.text()));o._name=f.name;state.orders.push(o)}catch{}
+ }
+ renderShop();
+}
+$('shopLoadOrder').onchange=e=>addOrders([...e.target.files]);
+$('clearOrders').onclick=()=>{state.orders=[];renderShop()};
 
-    for(const side of ['left','right','single']){
-      const src=p[side]||{};
-      state[side].x=src.x||0;
-      state[side].y=src.y||0;
-      state[side].scale=src.scale||1;
-      state[side].rot=src.rot||0;
-      state[side].flipH=!!src.flipH;
-      state[side].imgData=src.imgData||null;
-      if(side==='right')state.right.landscape=!!src.landscape;
-      state[side].img=src.imgData?await imageFromDataURL(src.imgData):null;
-    }
-
-    $('shrink').value=state.shrink;
-    $('leftOval').value=state.leftOval*100;
-    $('rightOval').value=state.rightOval*100;
-    $('freeW').value=state.freeW;
-    $('freeH').value=state.freeH;
-    $('freeShape').value=state.freeShape;
-    $('brightness').value=state.brightness;
-    $('contrast').value=state.contrast;
-    $('saturation').value=state.saturation;
-
-    ['left','right','single'].forEach(side=>{
-      $(side+'Scale').value=state[side].scale*100;
-      $(side+'Rot').value=state[side].rot;
-    });
-
-    $('rightPortrait').classList.toggle('active',!state.right.landscape);
-    $('rightLandscape').classList.toggle('active',state.right.landscape);
-
-    updateLabels();
-    setMode(state.mode);
-    $('projectStatus').textContent='プロジェクトを読み込みました。そのまま印刷できます。';
-  }catch(e){
-    $('projectStatus').textContent='プロジェクトの読み込みに失敗しました。';
+function drawPiece(ctx,e,x,y,mmW,mmH,shape){
+ const w=mmW*MM,h=mmH*MM;ctx.save();path(ctx,x,y,w,h,shape);ctx.clip();ctx.fillStyle='#fff';ctx.fillRect(x,y,w,h);
+ if(e?.img){
+  const base=Math.max(w/e.img.width,h/e.img.height)*(e.scale||1);
+  ctx.filter=filter(e);ctx.translate(x+w/2+(e.x||0)*.35,y+h/2+(e.y||0)*.35);ctx.rotate((e.rot||0)*Math.PI/180);ctx.scale(e.flipH?-1:1,1);
+  ctx.drawImage(e.img,-e.img.width*base/2,-e.img.height*base/2,e.img.width*base,e.img.height*base);
+ }
+ ctx.restore();
+ if($('cutLine').checked){ctx.save();ctx.strokeStyle='#7b8798';ctx.lineWidth=1.1;ctx.setLineDash([5,4]);path(ctx,x,y,w,h,shape);ctx.stroke();ctx.restore()}
+ return {w,h};
+}
+function renderShop(){
+ const list=$('orderList');list.innerHTML='';
+ state.orders.forEach((o,i)=>{
+  const div=document.createElement('div');div.className='orderCard';
+  const sets=o.mode==='keychain'?(o.lefts||[]).reduce((s,e)=>s+(e.qty||1),0):1;
+  div.innerHTML=`<div class="orderTitle">注文 ${i+1}</div><div class="small">${o._name||''} / ${o.mode} / ${sets}セット</div>`;
+  const del=document.createElement('button');del.className='outline';del.textContent='削除';del.onclick=()=>{state.orders.splice(i,1);renderShop()};
+  div.appendChild(del);list.appendChild(div);
+ });
+ $('shopStatus').textContent=`${state.orders.length}件の注文を読み込み済み`;
+ renderSheet();
+}
+function renderSheet(){
+ const c=$('sheetCanvas'),ctx=c.getContext('2d');ctx.filter='none';ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);
+ const margin=14*MM,gap=7*MM,rowGap=10*MM;let x=margin,y=margin;
+ function placePair(left,right,label){
+  const lw=24*MM,lh=33*MM,rw=(right.landscape?33.5:24.5)*MM,rh=(right.landscape?24.5:33.5)*MM,setW=lw+gap+rw,setH=Math.max(lh,rh);
+  if(x+setW>c.width-margin){x=margin;y+=setH+rowGap}
+  if(y+setH>c.height-margin)return false;
+  const a=drawPiece(ctx,left,x,y,24,33,'oval');
+  const b=drawPiece(ctx,right,x+a.w+gap,y,right.landscape?33.5:24.5,right.landscape?24.5:33.5,'oval');
+  if($('labels').checked){ctx.fillStyle='#526071';ctx.font='17px sans-serif';ctx.textAlign='center';ctx.fillText(label,x+(a.w+gap+b.w)/2,y+setH+20)}
+  x+=setW+gap;return true;
+ }
+ for(let oi=0;oi<state.orders.length;oi++){
+  const o=state.orders[oi];
+  if(o.mode==='keychain'){
+   for(let li=0;li<(o.lefts||[]).length;li++){
+    const e=o.lefts[li];for(let q=0;q<(e.qty||1);q++)if(!placePair(e,o.common,`注文${oi+1}-${li+1}`))return;
+   }
+  }else{
+   const d=o.mode==='id'?{w:30,h:40,shape:'rect'}:{w:o.freeW||30,h:o.freeH||40,shape:o.freeShape||'rect'};
+   const iw=d.w*MM,ih=d.h*MM;
+   if(x+iw>c.width-margin){x=margin;y+=ih+rowGap}
+   if(y+ih>c.height-margin)return;
+   drawPiece(ctx,o.single,x,y,d.w,d.h,d.shape);x+=iw+gap;
   }
+ }
 }
+$('cutLine').onchange=renderSheet;$('labels').onchange=renderSheet;
+$('downloadSheet').onclick=()=>{renderSheet();const a=document.createElement('a');a.download='shop-print-sheet-A4.png';a.href=$('sheetCanvas').toDataURL('image/png');a.click()};
+$('printSheet').onclick=()=>{renderSheet();window.print()};
 
-$('saveProject').onclick=exportProject;
-$('loadProject').onchange=e=>e.target.files[0]&&importProject(e.target.files[0]);
-
-updateLabels();
-setMode('keychain');
+renderAll();renderShop();
 </script>
 </body>
 </html>
