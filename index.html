@@ -54,6 +54,20 @@ summary{cursor:pointer;font-weight:800;min-height:40px;display:flex;align-items:
 .presetCard{text-align:left;display:grid;gap:3px}
 .presetCard span{font-size:12px;line-height:1.4}
 .albumGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.templateGallery{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.templateCard{border:1px solid var(--line);border-radius:14px;padding:10px;background:#fff;text-align:left;cursor:pointer}
+.templateCard.active{border-color:var(--pri);box-shadow:0 0 0 3px rgba(49,94,251,.15)}
+.templateCard strong{display:block;margin-bottom:3px}
+.templateCard span{font-size:12px;color:var(--muted);line-height:1.45}
+.qualityBox{border:1px solid var(--line);border-radius:14px;padding:10px;background:#f8fafc}
+.qualityGood{border-color:#86d3a7;background:#effcf4;color:#166534}
+.qualityWarn{border-color:#f2cf7e;background:#fff8e7;color:#7a4c00}
+.qualityBad{border-color:#f1a6a0;background:#fff2f1;color:#9f1f17}
+.mockupBox{border:1px solid var(--line);border-radius:16px;padding:10px;background:linear-gradient(180deg,#fafafa,#eceff3)}
+#mockupCanvas{display:block;width:100%;height:auto;border-radius:12px;background:#dfe3e8}
+.aiPanel{border:1px solid #b8c8ff;background:#f3f6ff;border-radius:14px;padding:10px}
+.aiPanel strong{display:block;margin-bottom:4px}
+
 .albumItem{border:1px solid var(--line);border-radius:12px;padding:8px;background:#fff}
 .albumItem img{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:8px}
 @media(max-width:900px){.grid{grid-template-columns:1fr}}
@@ -61,7 +75,7 @@ summary{cursor:pointer;font-weight:800;min-height:40px;display:flex;align-items:
  .wrap{padding:8px}.card,header{border-radius:16px}.pairGrid,.toolbar{grid-template-columns:1fr}
  .tabs{display:grid;grid-template-columns:1fr}.tabs button{width:100%}
  button,.fileBtn{min-height:48px;font-size:15px}.photoRow{grid-template-columns:1fr}.photoRow .row{display:grid;grid-template-columns:1fr 1fr}
- .previewStage{grid-template-columns:1fr 1fr}.presetGrid{grid-template-columns:1fr}.albumGrid{grid-template-columns:repeat(2,1fr)}
+ .previewStage{grid-template-columns:1fr 1fr}.presetGrid{grid-template-columns:1fr}.albumGrid{grid-template-columns:repeat(2,1fr)}.templateGallery{grid-template-columns:1fr 1fr}
  canvas.editor{max-height:44vh;object-fit:contain}
 }
 </style>
@@ -74,10 +88,22 @@ summary{cursor:pointer;font-weight:800;min-height:40px;display:flex;align-items:
 </header>
 
 <div class="tabs">
-<button id="modeGoods" class="active">グッズ・キーチェーン</button>
+<button id="modeGoods" class="active">キーチェーン</button>
 <button id="modePhoto" class="outline">写真用紙</button>
 <button id="modeAlbum" class="outline">アルバム</button>
 </div>
+<section class="card">
+<h2>かんたんテンプレート</h2>
+<div class="templateGallery">
+<button class="templateCard active" data-template="keychain"><strong>キーチェーン</strong><span>左右24.5×33.5mm</span></button>
+<button class="templateCard" data-template="L"><strong>L判写真</strong><span>89×127mm</span></button>
+<button class="templateCard" data-template="KG"><strong>KG判写真</strong><span>102×152mm</span></button>
+<button class="templateCard" data-template="A4"><strong>A4写真</strong><span>210×297mm</span></button>
+<button class="templateCard" data-template="album4"><strong>アルバム4枚</strong><span>1ページに4枚配置</span></button>
+<button class="templateCard" data-template="album6"><strong>アルバム6枚</strong><span>1ページに6枚配置</span></button>
+</div>
+</section>
+
 
 <div class="grid">
 <main>
@@ -85,7 +111,7 @@ summary{cursor:pointer;font-weight:800;min-height:40px;display:flex;align-items:
 <section id="goodsSection" class="card">
 <h2>1. キーチェーン設定</h2>
 <div class="pairGrid">
-<div class="panel"><h3>左側</h3><div class="row"><label>横 <input id="leftW" type="number" value="24" step="0.1"> mm</label><label>縦 <input id="leftH" type="number" value="33" step="0.1"> mm</label></div></div>
+<div class="panel"><h3>左側</h3><div class="row"><label>横 <input id="leftW" type="number" value="24.5" step="0.1"> mm</label><label>縦 <input id="leftH" type="number" value="33.5" step="0.1"> mm</label></div></div>
 <div class="panel"><h3>右側</h3><div class="row"><label>横 <input id="rightW" type="number" value="24.5" step="0.1"> mm</label><label>縦 <input id="rightH" type="number" value="33.5" step="0.1"> mm</label></div></div>
 </div>
 
@@ -153,7 +179,12 @@ summary{cursor:pointer;font-weight:800;min-height:40px;display:flex;align-items:
 <label>向き <select id="albumOrientation"><option value="portrait">縦</option><option value="landscape">横</option></select></label>
 <label>レイアウト <select id="albumLayout"><option value="1">1枚</option><option value="2">2枚</option><option value="4">4枚</option><option value="6">6枚</option></select></label>
 </div>
-<label class="fileBtn" for="albumFiles" style="margin-top:10px">アルバム写真を追加</label><input id="albumFiles" type="file" accept="image/*" multiple>
+<div class="row" style="margin-top:10px">
+<label class="fileBtn" for="albumFiles">アルバム写真を追加</label>
+<input id="albumFiles" type="file" accept="image/*" multiple>
+<button id="aiAlbumLayout" class="secondary">AIレイアウト</button>
+</div>
+<div id="albumLayoutStatus" class="status"></div>
 <div id="albumList" class="albumGrid" style="margin-top:10px"></div>
 </section>
 
@@ -176,13 +207,24 @@ summary{cursor:pointer;font-weight:800;min-height:40px;display:flex;align-items:
 
 <div style="margin-top:10px"><span class="badge">編集中</span> <strong id="editorTitle">右側・共通写真</strong></div>
 
+<div class="aiPanel" style="margin-top:8px">
+<strong>AIおすすめ一括</strong>
+<div class="small">トリミング・拡大・写真補正をまとめて提案します。</div>
+<button id="aiAll" style="width:100%;margin-top:8px">AIおすすめを適用</button>
+<div id="aiAllResult" class="status"></div>
+</div>
 <div class="toolbar" style="margin-top:8px">
-<button id="aiCrop" class="secondary">AIトリミング</button>
+<button id="aiCrop" class="secondary">AIトリミングのみ</button>
 <button id="undo" class="outline">1つ前に戻る</button>
 </div>
 <div class="control"><div class="labelrow"><span>拡大</span><span id="scaleLabel">100%</span></div><input id="scale" type="range" min="50" max="300" value="100"></div>
 <div class="control"><div class="labelrow"><span>回転</span><span id="rotLabel">0°</span></div><input id="rot" type="range" min="-180" max="180" value="0"></div>
 <div class="toolbar"><button id="rotate90">90°回転</button><button id="flipH" class="outline">左右反転</button><button id="reset" class="outline">リセット</button></div>
+
+<div id="qualityBox" class="qualityBox" style="margin-top:10px">
+<strong>印刷品質チェック</strong>
+<div id="qualityText" class="small">写真を選択すると確認できます。</div>
+</div>
 
 <details open>
 <summary>写真の見え方</summary>
@@ -199,6 +241,14 @@ summary{cursor:pointer;font-weight:800;min-height:40px;display:flex;align-items:
 <button data-preset="mono" class="presetCard outline"><strong>モノクロ</strong><span>シンプルな雰囲気</span></button>
 </div>
 </details>
+
+<div id="mockupSection" style="margin-top:14px">
+<h2>完成イメージ</h2>
+<div class="mockupBox">
+<canvas id="mockupCanvas" width="760" height="430"></canvas>
+</div>
+<div class="small" style="margin-top:6px">実際の透明感や厚みは製品により異なります。</div>
+</div>
 
 <h2 style="margin-top:14px">印刷プレビュー</h2>
 <div class="sheet"><canvas id="printCanvas" width="1240" height="1754"></canvas></div>
@@ -235,11 +285,104 @@ function drawImage(ctx,e,x,y,w,h){if(!e.img)return;const base=Math.max(w/e.img.w
 function drawPreview(canvas,side,e,shape='oval'){const ctx=canvas.getContext('2d'),d=dims(side);ctx.clearRect(0,0,canvas.width,canvas.height);ctx.fillStyle='#dfe6ef';ctx.fillRect(0,0,canvas.width,canvas.height);const pad=34,sc=Math.min((canvas.width-pad*2)/d.w,(canvas.height-pad*2)/d.h),w=d.w*sc,h=d.h*sc,x=(canvas.width-w)/2,y=(canvas.height-h)/2;ctx.save();shape==='oval'?ellipse(ctx,x,y,w,h):rect(ctx,x,y,w,h);ctx.clip();if(e.img)drawImage(ctx,e,x,y,w,h);ctx.restore();ctx.strokeStyle='#315efb';ctx.lineWidth=3;shape==='oval'?ellipse(ctx,x,y,w,h):rect(ctx,x,y,w,h);ctx.stroke()}
 function renderLefts(){const box=$('leftList');box.innerHTML='';state.lefts.forEach((e,i)=>{const r=document.createElement('div');r.className='photoRow'+(state.active.type==='left'&&state.active.index===i?' active':'');r.innerHTML=`<div><strong>左側写真 ${i+1}</strong><div class="small">${e.img?'選択済み':'未選択'}</div></div>`;const c=document.createElement('div');c.className='row';const l=document.createElement('label');l.className='fileBtn';l.textContent='写真を選択';const inp=document.createElement('input');inp.type='file';inp.accept='image/*';inp.onchange=ev=>ev.target.files[0]&&setFile(e,ev.target.files[0]);l.appendChild(inp);const b=document.createElement('button');b.className='outline';b.textContent='調整';b.onclick=()=>{state.active={type:'left',index:i};renderAll()};c.append(l,b);r.append(c);box.append(r)})}
 function renderAlbumList(){const box=$('albumList');box.innerHTML='';state.albums.forEach((e,i)=>{const d=document.createElement('div');d.className='albumItem';d.innerHTML=`<img src="${e.imgData}"><div class="small">写真 ${i+1}</div>`;box.append(d)})}
-function renderAll(){renderLefts();renderAlbumList();if(state.mode==='goods'){drawPreview($('leftCanvas'),'left',state.lefts[state.active.index]||state.lefts[0]);drawPreview($('rightCanvas'),'right',state.common);$('editorTitle').textContent=state.active.type==='right'?'右側・共通写真':`左側写真 ${state.active.index+1}`}else if(state.mode==='photo'){drawPreview($('singleCanvas'),'single',state.single,'rect');$('editorTitle').textContent='写真用紙'}const e=activeEdit();$('scale').value=e.scale*100;$('rot').value=e.rot;$('scaleLabel').textContent=Math.round(e.scale*100)+'%';$('rotLabel').textContent=Math.round(e.rot)+'°';document.querySelectorAll('[data-preset]').forEach(b=>{b.classList.toggle('active',b.dataset.preset===e.preset);b.classList.toggle('outline',b.dataset.preset!==e.preset)});renderPrint()}
+
+function activeTargetMm(){
+ if(state.mode==='goods'){
+  return state.active.type==='right'?dims('right'):dims('left');
+ }
+ if(state.mode==='photo')return dims('single');
+ return null;
+}
+
+function updateQualityCheck(){
+ const box=$('qualityBox'),label=$('qualityText'),e=activeEdit(),target=activeTargetMm();
+ box.className='qualityBox';
+
+ if(!e?.img || !target){
+  label.textContent=state.mode==='album'
+   ?'アルバムでは各枠サイズに応じて自動確認します。'
+   :'写真を選択すると確認できます。';
+  return;
+ }
+
+ const neededW=target.w/25.4*300;
+ const neededH=target.h/25.4*300;
+ const effectiveW=e.img.width/Math.max(1,e.scale);
+ const effectiveH=e.img.height/Math.max(1,e.scale);
+ const ratio=Math.min(effectiveW/neededW,effectiveH/neededH);
+
+ if(ratio>=1){
+  box.classList.add('qualityGood');
+  label.textContent='高品質：300dpi相当以上で印刷できる見込みです。';
+ }else if(ratio>=.67){
+  box.classList.add('qualityWarn');
+  label.textContent='標準品質：小さいサイズなら十分ですが、近くで見ると少し粗さが出る可能性があります。';
+ }else{
+  box.classList.add('qualityBad');
+  label.textContent='解像度注意：拡大しすぎか、元画像が小さい可能性があります。';
+ }
+}
+
+function renderAll(){renderLefts();renderAlbumList();if(state.mode==='goods'){drawPreview($('leftCanvas'),'left',state.lefts[state.active.index]||state.lefts[0]);drawPreview($('rightCanvas'),'right',state.common);$('editorTitle').textContent=state.active.type==='right'?'右側・共通写真':`左側写真 ${state.active.index+1}`}else if(state.mode==='photo'){drawPreview($('singleCanvas'),'single',state.single,'rect');$('editorTitle').textContent='写真用紙'}const e=activeEdit();$('scale').value=e.scale*100;$('rot').value=e.rot;$('scaleLabel').textContent=Math.round(e.scale*100)+'%';$('rotLabel').textContent=Math.round(e.rot)+'°';document.querySelectorAll('[data-preset]').forEach(b=>{b.classList.toggle('active',b.dataset.preset===e.preset);b.classList.toggle('outline',b.dataset.preset!==e.preset)});updateQualityCheck();drawMockup();renderPrint()}
+
+function setTemplatePreset(name){
+ document.querySelectorAll('.templateCard').forEach(b=>{
+  b.classList.toggle('active',b.dataset.template===name);
+ });
+
+ if(name==='keychain'){
+  $('leftW').value=24.5;$('leftH').value=33.5;
+  $('rightW').value=24.5;$('rightH').value=33.5;
+  setMode('goods');
+ }else if(['L','KG','A4'].includes(name)){
+  $('paperSize').value=name;
+  $('paperOrientation').value='portrait';
+  setMode('photo');
+ }else if(name==='album4'){
+  $('albumLayout').value='4';
+  setMode('album');
+ }else if(name==='album6'){
+  $('albumLayout').value='6';
+  setMode('album');
+ }
+ renderAll();
+}
+document.querySelectorAll('.templateCard').forEach(b=>{
+ b.onclick=()=>setTemplatePreset(b.dataset.template);
+});
+
 function setMode(m){state.mode=m;['Goods','Photo','Album'].forEach(x=>{$('mode'+x).classList.toggle('active',m===x.toLowerCase());$('mode'+x).classList.toggle('outline',m!==x.toLowerCase())});$('goodsSection').classList.toggle('hidden',m!=='goods');$('photoSection').classList.toggle('hidden',m!=='photo');$('albumSection').classList.toggle('hidden',m!=='album');$('goodsPreview').classList.toggle('hidden',m!=='goods');$('singleCanvas').classList.toggle('hidden',m!=='photo');renderAll()}
 $('modeGoods').onclick=()=>setMode('goods');$('modePhoto').onclick=()=>setMode('photo');$('modeAlbum').onclick=()=>setMode('album');
 
 $('commonFile').onchange=e=>e.target.files[0]&&setFile(state.common,e.target.files[0]);$('singleFile').onchange=e=>e.target.files[0]&&setFile(state.single,e.target.files[0]);
+
+function aiArrangeAlbum(){
+ const layout=+$('albumLayout').value;
+ if(!state.albums.length){
+  $('albumLayoutStatus').textContent='写真を追加してください。';
+  return;
+ }
+ // prioritize a balanced sequence of portrait and landscape images
+ const portrait=[],landscape=[],square=[];
+ state.albums.forEach(e=>{
+  if(!e.img)return;
+  const r=e.img.width/e.img.height;
+  if(r>1.15)landscape.push(e);
+  else if(r<.87)portrait.push(e);
+  else square.push(e);
+ });
+ const arranged=[];
+ while(arranged.length<state.albums.length){
+  if(landscape.length)arranged.push(landscape.shift());
+  if(portrait.length)arranged.push(portrait.shift());
+  if(square.length)arranged.push(square.shift());
+ }
+ state.albums=arranged;
+ $('albumLayoutStatus').textContent=`縦横のバランスを考慮して並び替えました。先頭${Math.min(layout,state.albums.length)}枚を使用します。`;
+ renderAll();
+}
+$('aiAlbumLayout').onclick=aiArrangeAlbum;
+
 $('albumFiles').onchange=async e=>{for(const f of e.target.files){const d=await fileData(f);state.albums.push({imgData:d,img:await imageFrom(d)})}renderAll()};
 $('addLeft').onclick=()=>{if(state.lefts.length<4){state.lefts.push(emptyEdit());renderAll()}};
 $('chooseRight').onclick=()=>{state.active={type:'right',index:-1};renderAll()};$('chooseLeft').onclick=()=>{state.active={type:'left',index:0};renderAll()};
@@ -248,8 +391,120 @@ $('pairMinus').onclick=()=>{$('pairCopies').value=Math.max(1,+$('pairCopies').va
 $('scale').oninput=e=>{activeEdit().scale=+e.target.value/100;renderAll()};$('rot').oninput=e=>{activeEdit().rot=+e.target.value;renderAll()};$('rotate90').onclick=()=>{pushUndo(activeEdit());activeEdit().rot=(activeEdit().rot+90)%360;renderAll()};$('flipH').onclick=()=>{pushUndo(activeEdit());activeEdit().flipH=!activeEdit().flipH;renderAll()};$('reset').onclick=()=>{pushUndo(activeEdit());Object.assign(activeEdit(),emptyEdit(),{img:activeEdit().img,imgData:activeEdit().imgData});renderAll()};$('undo').onclick=doUndo;
 document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{pushUndo(activeEdit());activeEdit().preset=b.dataset.preset;renderAll()});
 
+
+function drawMockup(){
+ const canvas=$('mockupCanvas');
+ if(!canvas)return;
+ const ctx=canvas.getContext('2d');
+ ctx.clearRect(0,0,canvas.width,canvas.height);
+
+ if(state.mode!=='goods'){
+  $('mockupSection').classList.add('hidden');
+  return;
+ }
+ $('mockupSection').classList.remove('hidden');
+
+ ctx.fillStyle='#d7dce3';
+ ctx.fillRect(0,0,canvas.width,canvas.height);
+
+ // outer product shell
+ ctx.save();
+ ctx.translate(canvas.width/2,canvas.height/2);
+ ctx.fillStyle='rgba(255,255,255,.82)';
+ ctx.strokeStyle='#a8b0bc';
+ ctx.lineWidth=8;
+ roundRect(ctx,-320,-150,640,300,85);
+ ctx.fill();ctx.stroke();
+
+ // hinge
+ ctx.fillStyle='#8b949f';
+ roundRect(ctx,-25,-170,50,340,18);
+ ctx.fill();
+
+ // photo slots
+ drawMockupSlot(ctx,state.lefts[state.active.index]||state.lefts[0],-250,-115,205,230);
+ drawMockupSlot(ctx,state.common,45,-115,205,230);
+
+ // shine
+ const grad=ctx.createLinearGradient(-320,-150,320,150);
+ grad.addColorStop(0,'rgba(255,255,255,.55)');
+ grad.addColorStop(.45,'rgba(255,255,255,.08)');
+ grad.addColorStop(1,'rgba(255,255,255,.32)');
+ ctx.fillStyle=grad;
+ roundRect(ctx,-320,-150,640,300,85);
+ ctx.fill();
+ ctx.restore();
+}
+
+function roundRect(ctx,x,y,w,h,r){
+ ctx.beginPath();
+ ctx.moveTo(x+r,y);
+ ctx.lineTo(x+w-r,y);
+ ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+ ctx.lineTo(x+w,y+h-r);
+ ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+ ctx.lineTo(x+r,y+h);
+ ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+ ctx.lineTo(x,y+r);
+ ctx.quadraticCurveTo(x,y,x+r,y);
+ ctx.closePath();
+}
+function drawMockupSlot(ctx,e,x,y,w,h){
+ ctx.save();
+ ellipse(ctx,x,y,w,h);
+ ctx.clip();
+ ctx.fillStyle='#f3f4f6';
+ ctx.fillRect(x,y,w,h);
+ if(e?.img)drawImage(ctx,e,x,y,w,h);
+ ctx.restore();
+ ctx.strokeStyle='#b7bec8';
+ ctx.lineWidth=3;
+ ellipse(ctx,x,y,w,h);ctx.stroke();
+}
+
 async function aiCrop(){const e=activeEdit();if(!e.img){$('status').textContent='写真を選択してください。';return}pushUndo(e);try{if('FaceDetector'in window){const fd=new FaceDetector({fastMode:true,maxDetectedFaces:5});const faces=await fd.detect(e.img);if(faces.length){let minX=Infinity,minY=Infinity,maxX=0,maxY=0;faces.forEach(f=>{const b=f.boundingBox;minX=Math.min(minX,b.x);minY=Math.min(minY,b.y);maxX=Math.max(maxX,b.x+b.width);maxY=Math.max(maxY,b.y+b.height)});const cx=(minX+maxX)/2/e.img.width-.5,cy=(minY+maxY)/2/e.img.height-.5;e.xNorm=-cx;e.yNorm=-cy;e.scale=Math.max(1,Math.min(2.2,1/(Math.max((maxX-minX)/e.img.width,(maxY-minY)/e.img.height)*2.2)));$('status').textContent='顔を検出して中央へ配置しました。';renderAll();return}}e.xNorm=0;e.yNorm=0;e.scale=1;$('status').textContent='顔検出に未対応のため、中央基準で配置しました。';renderAll()}catch{e.xNorm=0;e.yNorm=0;e.scale=1;renderAll()}}
 $('aiCrop').onclick=aiCrop;
+function analyzePhotoMetrics(edit){
+ if(!edit?.img)return null;
+ const c=document.createElement('canvas');
+ const max=180,ratio=Math.min(1,max/Math.max(edit.img.width,edit.img.height));
+ c.width=Math.max(1,Math.round(edit.img.width*ratio));
+ c.height=Math.max(1,Math.round(edit.img.height*ratio));
+ const ctx=c.getContext('2d',{willReadFrequently:true});
+ ctx.drawImage(edit.img,0,0,c.width,c.height);
+ const d=ctx.getImageData(0,0,c.width,c.height).data;
+ let sum=0,sum2=0,sat=0,count=0,dark=0;
+ for(let i=0;i<d.length;i+=16){
+  const r=d[i],g=d[i+1],b=d[i+2],mx=Math.max(r,g,b),mn=Math.min(r,g,b);
+  const l=.299*r+.587*g+.114*b;
+  sum+=l;sum2+=l*l;sat+=mx?((mx-mn)/mx):0;if(l<70)dark++;count++;
+ }
+ const mean=sum/count,variance=Math.max(0,sum2/count-mean*mean);
+ return{mean,contrast:Math.sqrt(variance),saturation:sat/count,darkRatio:dark/count};
+}
+
+async function aiRecommendAll(){
+ const e=activeEdit(),result=$('aiAllResult');
+ if(!e.img){result.textContent='写真を選択してください。';return}
+
+ pushUndo(e);
+ await aiCrop();
+
+ const m=analyzePhotoMetrics(e);
+ let preset='auto',reason='全体をバランスよく整えました。';
+ if(m.mean<85||m.darkRatio>.4){preset='bright';reason='暗めの写真なので、明るさを優先しました。'}
+ else if(m.mean<110&&m.contrast>55){preset='night';reason='暗部が多いため、夜景向けに整えました。'}
+ else if(m.saturation>.35){preset='soft';reason='色が強めなので、自然に見えるよう整えました。'}
+ else if(m.contrast<30){preset='sharp';reason='写真が少し平坦なので、くっきり補正しました。'}
+ else if(m.saturation>.22&&m.mean>115){preset='travel';reason='明るく色のある写真なので、テーマパーク向けに整えました。'}
+
+ e.preset=preset;
+ result.textContent=reason;
+ renderAll();
+}
+$('aiAll').onclick=aiRecommendAll;
+
+
 
 function drawPiece(ctx,e,x,y,w,h,shape='oval'){ctx.save();shape==='oval'?ellipse(ctx,x,y,w,h):rect(ctx,x,y,w,h);ctx.clip();ctx.fillStyle='#fff';ctx.fillRect(x,y,w,h);if(e.img)drawImage(ctx,e,x,y,w,h);ctx.restore();ctx.strokeStyle='#aaa';ctx.lineWidth=1;shape==='oval'?ellipse(ctx,x,y,w,h):rect(ctx,x,y,w,h);ctx.stroke()}
 function paperMm(code){
