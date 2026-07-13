@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Photo Template Studio v4.0 Final</title>
+<title>Photo Template Studio v4.1 Final</title>
 <style>
 :root{--bg:#f4f7fb;--card:#fff;--ink:#172033;--muted:#667085;--line:#d9e1ec;--pri:#315efb;--pri2:#244bd8;--sec:#0f766e;--danger:#b42318}
 *{box-sizing:border-box}
@@ -120,7 +120,7 @@ summary{cursor:pointer;font-weight:800;min-height:40px;display:flex;align-items:
 <body>
 <div class="wrap">
 <header>
-<h1>Photo Template Studio v4.0 Final</h1>
+<h1>Photo Template Studio v4.1 Final</h1>
 <div class="small">キーチェーン向け顔優先AIトリミング、写真用紙、アルバム作成に対応した完成版です。</div>
 </header>
 
@@ -247,7 +247,15 @@ summary{cursor:pointer;font-weight:800;min-height:40px;display:flex;align-items:
 </div>
 <canvas id="singleCanvas" class="editor hidden" width="660" height="800"></canvas>
 
+<div class="small" style="margin-top:8px">写真をドラッグして位置を調整できます。</div>
 <div style="margin-top:10px"><span class="badge">編集中</span> <strong id="editorTitle">右側・共通写真</strong></div>
+
+<div class="aiPanel" style="margin-top:8px">
+<strong>AIおすすめ一括</strong>
+<div class="small">トリミング・拡大・写真補正をまとめて提案します。</div>
+<button id="aiAll" style="width:100%;margin-top:8px">AIおすすめを適用</button>
+<div id="aiAllResult" class="status"></div>
+</div>
 
 <div class="aiPanel" style="margin-top:8px">
 <strong>AI顔優先トリミング</strong>
@@ -263,13 +271,6 @@ summary{cursor:pointer;font-weight:800;min-height:40px;display:flex;align-items:
 <button id="aiFaceCrop">顔優先で自動調整</button>
 </div>
 <div id="aiFaceResult" class="status">写真を選択してから実行してください。</div>
-</div>
-
-<div class="aiPanel" style="margin-top:8px">
-<strong>AIおすすめ一括</strong>
-<div class="small">トリミング・拡大・写真補正をまとめて提案します。</div>
-<button id="aiAll" style="width:100%;margin-top:8px">AIおすすめを適用</button>
-<div id="aiAllResult" class="status"></div>
 </div>
 <div class="toolbar" style="margin-top:8px">
 <button id="aiCrop" class="secondary">AIトリミングのみ</button>
@@ -617,7 +618,36 @@ document.querySelectorAll('.templateCard').forEach(b=>{
  b.onclick=()=>setTemplatePreset(b.dataset.template);
 });
 
-function setMode(m){state.mode=m;['Goods','Photo','Album'].forEach(x=>{$('mode'+x).classList.toggle('active',m===x.toLowerCase());$('mode'+x).classList.toggle('outline',m!==x.toLowerCase())});$('goodsSection').classList.toggle('hidden',m!=='goods');$('photoSection').classList.toggle('hidden',m!=='photo');$('albumSection').classList.toggle('hidden',m!=='album');$('goodsPreview').classList.toggle('hidden',m!=='goods');$('singleCanvas').classList.toggle('hidden',m!=='photo');renderAll()}
+function setMode(m){
+ state.mode=m;
+
+ ['Goods','Photo','Album'].forEach(x=>{
+  const active=m===x.toLowerCase();
+  $('mode'+x).classList.toggle('active',active);
+  $('mode'+x).classList.toggle('outline',!active);
+ });
+
+ $('goodsSection').classList.toggle('hidden',m!=='goods');
+ $('photoSection').classList.toggle('hidden',m!=='photo');
+ $('albumSection').classList.toggle('hidden',m!=='album');
+ $('goodsPreview').classList.toggle('hidden',m!=='goods');
+ $('singleCanvas').classList.toggle('hidden',m!=='photo');
+
+ if(m==='goods'){
+  if(state.active.type!=='left' && state.active.type!=='right'){
+   state.active={type:'right',index:-1};
+  }
+  document.querySelectorAll('.templateCard').forEach(b=>{
+   b.classList.toggle('active',b.dataset.template==='keychain');
+  });
+ }else if(m==='photo'){
+  state.active={type:'single',index:-1};
+ }else{
+  state.active={type:'album',index:-1};
+ }
+
+ renderAll();
+}
 $('modeGoods').onclick=()=>setMode('goods');$('modePhoto').onclick=()=>setMode('photo');$('modeAlbum').onclick=()=>setMode('album');
 
 $('commonFile').onchange=async e=>{
@@ -992,8 +1022,8 @@ async function compactImageData(edit,maxSide=900,quality=.72){
 
 function projectPayload(){
  return {
-  app:'Photo Template Studio v4.0 Final',
-  version:9,
+  app:'Photo Template Studio v4.1 Final',
+  version:10,
   mode:state.mode,
   compareOriginal:false,
   faceGuide:state.faceGuide,
@@ -1096,7 +1126,7 @@ function migrateProject(raw){
  // Current / v3 family
  if(p.common || p.lefts){
   return {
-   mode:p.mode==='keychain'?'goods':(p.mode||'goods'),
+   mode:(p.mode==='keychain'||p.mode==='key')?'goods':(p.mode||'goods'),
    active:p.active||{type:'right',index:-1},
    leftW:Number(p.leftW||24.5),
    leftH:Number(p.leftH||33.5),
@@ -1147,13 +1177,119 @@ $('loadProject').onchange=async e=>{
    if(item?.imgData)item.img=await imageFrom(item.imgData);
   }
 
-  setMode(state.mode||'goods');
-  $('status').textContent='プロジェクトを読み込みました。位置情報も現在の描画方式へ変換しました。';
+  const loadedMode=state.mode||'goods';
+
+  if(loadedMode==='goods'){
+   state.active=p.active && ['left','right'].includes(p.active.type)
+    ? p.active
+    : {type:'right',index:-1};
+  }else if(loadedMode==='photo'){
+   state.active={type:'single',index:-1};
+  }else{
+   state.active={type:'album',index:-1};
+  }
+
+  setMode(loadedMode);
+
+  // Ensure the restored screen is visible immediately after reading.
+  setTimeout(()=>{
+   if(loadedMode==='goods'){
+    $('goodsSection').scrollIntoView({behavior:'smooth',block:'start'});
+   }else if(loadedMode==='photo'){
+    $('photoSection').scrollIntoView({behavior:'smooth',block:'start'});
+   }else{
+    $('albumSection').scrollIntoView({behavior:'smooth',block:'start'});
+   }
+  },50);
+
+  $('status').textContent='プロジェクトを読み込み、保存時の画面へ自動で切り替えました。';
  }catch(err){
   console.error(err);
   $('status').textContent='読み込みに失敗しました。ファイル形式を確認してください。';
  }
 };
+
+
+function bindManualDrag(canvas,side){
+ let dragging=false;
+ let last=null;
+
+ function point(ev){
+  const rect=canvas.getBoundingClientRect();
+  const p=ev.touches?ev.touches[0]:ev;
+  return {
+   x:(p.clientX-rect.left)*canvas.width/rect.width,
+   y:(p.clientY-rect.top)*canvas.height/rect.height
+  };
+ }
+
+ function activateSide(){
+  if(state.mode!=='goods')return;
+  if(side==='left'){
+   const index=state.active.type==='left'
+    ? Math.max(0,state.active.index)
+    : 0;
+   state.active={type:'left',index:Math.min(index,state.lefts.length-1)};
+  }else{
+   state.active={type:'right',index:-1};
+  }
+ }
+
+ function down(ev){
+  if(state.mode==='album')return;
+  activateSide();
+  const edit=activeEdit();
+  if(!edit?.img)return;
+  pushUndo(edit);
+  dragging=true;
+  last=point(ev);
+  ev.preventDefault();
+ }
+
+ function move(ev){
+  if(!dragging)return;
+  const current=point(ev);
+  const edit=activeEdit();
+
+  let d;
+  if(state.mode==='photo'){
+   d=dims('single');
+  }else{
+   d=dims(side);
+  }
+
+  const pad=34;
+  const scale=Math.min(
+   (canvas.width-pad*2)/d.w,
+   (canvas.height-pad*2)/d.h
+  );
+  const frameW=d.w*scale;
+  const frameH=d.h*scale;
+
+  edit.xNorm+=(current.x-last.x)/frameW;
+  edit.yNorm+=(current.y-last.y)/frameH;
+  last=current;
+  renderAll();
+  ev.preventDefault();
+ }
+
+ function up(){
+  dragging=false;
+  last=null;
+ }
+
+ canvas.addEventListener('mousedown',down);
+ canvas.addEventListener('mousemove',move);
+ window.addEventListener('mouseup',up);
+
+ canvas.addEventListener('touchstart',down,{passive:false});
+ canvas.addEventListener('touchmove',move,{passive:false});
+ window.addEventListener('touchend',up);
+}
+
+bindManualDrag($('leftCanvas'),'left');
+bindManualDrag($('rightCanvas'),'right');
+bindManualDrag($('singleCanvas'),'single');
 
 renderAll();
 </script>
