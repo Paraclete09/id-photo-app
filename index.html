@@ -129,7 +129,6 @@ summary{cursor:pointer;font-weight:800;min-height:40px;display:flex;align-items:
 <div class="row" style="margin-top:8px">
 <label class="fileBtn" for="commonFile">写真を選択</label>
 <input id="commonFile" type="file" accept="image/*">
-<button id="editCommon" class="outline">調整する</button>
 </div>
 <div class="row" style="margin-top:8px">
 <button id="commonPortrait" class="outline active">縦</button>
@@ -193,6 +192,7 @@ summary{cursor:pointer;font-weight:800;min-height:40px;display:flex;align-items:
 <div class="toolbar">
 <button id="rotate90" class="secondary">90°回転</button>
 <button id="flipH" class="outline">左右反転</button>
+<button id="undoEdit" class="outline">1つ前に戻る</button>
 <button id="resetEdit" class="outline">リセット</button>
 </div>
 </details>
@@ -246,6 +246,49 @@ const state={
  sameSize:false,pairCopies:1
 };
 
+const undoHistory=new WeakMap();
+
+function editSnapshot(edit){
+ return {
+  img:edit.img,
+  imgData:edit.imgData,
+  xNorm:edit.xNorm,
+  yNorm:edit.yNorm,
+  scale:edit.scale,
+  rot:edit.rot,
+  flipH:edit.flipH,
+  brightness:edit.brightness,
+  contrast:edit.contrast,
+  saturation:edit.saturation,
+  preset:edit.preset,
+  landscape:edit.landscape
+ };
+}
+
+function pushUndo(edit){
+ if(!edit)return;
+ const stack=undoHistory.get(edit)||[];
+ stack.push(editSnapshot(edit));
+ if(stack.length>20)stack.shift();
+ undoHistory.set(edit,stack);
+}
+
+function undoEdit(){
+ const edit=activeEdit();
+ const stack=undoHistory.get(edit)||[];
+ const previous=stack.pop();
+ if(!previous)return;
+ Object.assign(edit,previous);
+ undoHistory.set(edit,stack);
+ adjustCache.delete(edit);
+ renderAll();
+}
+
+function hasUndo(edit){
+ return (undoHistory.get(edit)||[]).length>0;
+}
+
+
 function dataURL(file){
  return new Promise((res,rej)=>{
   const r=new FileReader();
@@ -273,6 +316,7 @@ async function compressImageFile(file,maxSide=1800,quality=.9){
  return canvas.toDataURL('image/jpeg',quality);
 }
 async function loadInto(edit,file){
+ pushUndo(edit);
  edit.imgData=await compressImageFile(file);
  edit.img=await imgFrom(edit.imgData);
  renderAll();
@@ -396,6 +440,7 @@ function drawPreview(canvas,side,edit,isActive){
 
 function applyPreset(name){
  const e=activeEdit();
+ pushUndo(e);
  e.preset=name;
  if(name==='bright'){
   e.brightness=14;e.contrast=4;e.saturation=2;
@@ -520,6 +565,7 @@ function renderAll(){
  $('pairCopiesInput').value=state.pairCopies;
 
  updatePresetButtons();
+ $('undoEdit').disabled=!hasUndo(e);
  renderSheet();
 }
 
@@ -549,7 +595,6 @@ $('commonFile').onchange=async e=>{
  }
 };
 
-$('editCommon').onclick=()=>setActive('right');
 $('selectRightPreview').onclick=()=>setActive('right');
 $('selectLeftPreview').onclick=()=>setActive('left',0);
 
@@ -575,11 +620,29 @@ $('commonLandscape').onclick=()=>{
  renderAll();
 };
 
+function prepareSliderUndo(){
+ const edit=activeEdit();
+ if(!edit._sliderUndoPrepared){
+  pushUndo(edit);
+  edit._sliderUndoPrepared=true;
+ }
+}
+function finishSliderUndo(){
+ const edit=activeEdit();
+ edit._sliderUndoPrepared=false;
+}
+
+$('scale').addEventListener('pointerdown',prepareSliderUndo);
+$('scale').addEventListener('touchstart',prepareSliderUndo,{passive:true});
+$('scale').addEventListener('change',finishSliderUndo);
 $('scale').oninput=e=>{
  activeEdit().scale=+e.target.value/100;
  renderAll();
 };
 
+$('rot').addEventListener('pointerdown',prepareSliderUndo);
+$('rot').addEventListener('touchstart',prepareSliderUndo,{passive:true});
+$('rot').addEventListener('change',finishSliderUndo);
 $('rot').oninput=e=>{
  activeEdit().rot=+e.target.value;
  renderAll();
@@ -587,18 +650,23 @@ $('rot').oninput=e=>{
 
 $('rotate90').onclick=()=>{
  const e=activeEdit();
+ pushUndo(e);
  e.rot=(e.rot+90)%360;
  renderAll();
 };
 
 $('flipH').onclick=()=>{
  const e=activeEdit();
+ pushUndo(e);
  e.flipH=!e.flipH;
  renderAll();
 };
 
+$('undoEdit').onclick=undoEdit;
+
 $('resetEdit').onclick=()=>{
  const e=activeEdit();
+ pushUndo(e);
  Object.assign(e,{
   xNorm:0,yNorm:0,scale:1,rot:0,flipH:false,
   brightness:0,contrast:0,saturation:0,preset:'normal'
@@ -639,6 +707,7 @@ function bindDrag(canvas,side){
      (side==='right'&&state.active.type!=='right')){
    setActive(side==='left'?'left':'right',side==='left'?0:-1);
   }
+  pushUndo(activeEdit());
   dragging=true;
   last=pos(ev);
   ev.preventDefault();
@@ -836,6 +905,7 @@ $('printSheet').onclick=$('printSheetMobile').onclick=()=>{
 function serial(edit){
  const o={...edit};
  delete o.img;
+ delete o._sliderUndoPrepared;
  return o;
 }
 function project(){
