@@ -1,1033 +1,458 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>証明写真 40×30mm 変換アプリ</title>
-  <style>
-    :root {
-      --bg: #f6f8fb;
-      --card: #ffffff;
-      --line: #d9e0ea;
-      --text: #16202a;
-      --muted: #5c6b7a;
-      --primary: #2563eb;
-      --primary-dark: #1d4ed8;
-      --good: #16a34a;
-      --warn: #b45309;
-      --shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
-      --radius: 20px;
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
-      background: var(--bg);
-      color: var(--text);
-    }
-
-    .wrap {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-
-    h1 {
-      font-size: 28px;
-      margin: 0 0 8px;
-    }
-
-    .lead {
-      margin: 0;
-      color: var(--muted);
-      line-height: 1.7;
-    }
-
-    .hero,
-    .card {
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-    }
-
-    .hero {
-      padding: 22px;
-      margin-bottom: 20px;
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: 1.4fr 0.9fr;
-      gap: 20px;
-    }
-
-    .card {
-      padding: 18px;
-    }
-
-    .card h2 {
-      margin: 0 0 14px;
-      font-size: 20px;
-    }
-
-    .section + .section {
-      margin-top: 20px;
-    }
-
-    .buttons {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-bottom: 14px;
-    }
-
-    button,
-    .fake-button {
-      border: none;
-      border-radius: 14px;
-      padding: 12px 16px;
-      font-size: 14px;
-      cursor: pointer;
-      background: var(--primary);
-      color: #fff;
-      transition: 0.2s ease;
-      text-decoration: none;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 44px;
-    }
-
-    button:hover,
-    .fake-button:hover {
-      background: var(--primary-dark);
-    }
-
-    button.secondary {
-      background: #0f766e;
-    }
-
-    button.secondary:hover {
-      background: #115e59;
-    }
-
-    button.outline {
-      background: #fff;
-      color: var(--text);
-      border: 1px solid var(--line);
-    }
-
-    button.outline:hover {
-      background: #f8fafc;
-    }
-
-    button:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
-    input[type="file"] {
-      display: none;
-    }
-
-    .canvas-box {
-      border: 1px solid var(--line);
-      border-radius: 20px;
-      overflow: hidden;
-      background: #eef2f7;
-    }
-
-    #editorCanvas {
-      width: 100%;
-      display: block;
-      touch-action: none;
-      background: #e8edf5;
-    }
-
-    .status {
-      margin-top: 12px;
-      color: var(--muted);
-      font-size: 14px;
-      line-height: 1.7;
-    }
-
-    .control {
-      border: 1px solid var(--line);
-      border-radius: 16px;
-      padding: 14px;
-      margin-bottom: 12px;
-      background: #fff;
-    }
-
-    .control-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 8px;
-      gap: 12px;
-    }
-
-    .control label {
-      font-size: 14px;
-      font-weight: 600;
-    }
-
-    .control .value {
-      font-size: 13px;
-      color: var(--muted);
-    }
-
-    input[type="range"] {
-      width: 100%;
-    }
-
-    .check {
-      border: 1px solid var(--line);
-      border-radius: 16px;
-      padding: 14px;
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      margin-bottom: 12px;
-      background: #fff;
-    }
-
-    .check label {
-      font-size: 14px;
-      line-height: 1.5;
-      cursor: pointer;
-    }
-
-    .preview-wrap {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      border: 1px solid var(--line);
-      border-radius: 20px;
-      background: #fff;
-      min-height: 360px;
-      padding: 16px;
-    }
-
-    #outputCanvas {
-      max-width: 100%;
-      height: auto;
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
-      background: #fff;
-    }
-
-    .subinfo {
-      margin-top: 12px;
-      font-size: 14px;
-      color: var(--muted);
-      line-height: 1.8;
-    }
-
-    .alert {
-      border-radius: 18px;
-      padding: 14px 16px;
-      border: 1px solid var(--line);
-      background: #fff;
-      line-height: 1.8;
-      font-size: 14px;
-      color: var(--text);
-    }
-
-    .alert.warn {
-      background: #fff8eb;
-      border-color: #f4d7a3;
-    }
-
-    .alert strong {
-      display: block;
-      margin-bottom: 4px;
-    }
-
-    .dpi-row {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-top: 6px;
-    }
-
-    .dpi-row button.active {
-      background: var(--primary);
-      color: #fff;
-      border-color: var(--primary);
-    }
-
-    .footer-note {
-      font-size: 13px;
-      color: var(--muted);
-      line-height: 1.7;
-      margin-top: 12px;
-    }
-
-    @media (max-width: 900px) {
-      .grid {
-        grid-template-columns: 1fr;
-      }
-
-      h1 {
-        font-size: 24px;
-      }
-
-      .wrap {
-        padding: 14px;
-      }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Photo Template Studio</title>
+<style>
+:root{--bg:#f4f7fb;--card:#fff;--ink:#172033;--muted:#667085;--line:#d9e1ec;--pri:#315efb;--pri2:#244bd8;--sec:#0f766e;--warn:#8a5b00}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Sans","Yu Gothic",sans-serif}
+.wrap{max-width:1200px;margin:auto;padding:16px}
+header,.card{background:#fff;border:1px solid var(--line);border-radius:22px;box-shadow:0 10px 28px rgba(16,24,40,.06)}
+header{padding:22px;margin-bottom:16px}
+h1{font-size:clamp(24px,4vw,34px);margin:0 0 8px}
+h2{font-size:20px;margin:0 0 14px}
+p{line-height:1.7}
+.small{font-size:13px;color:var(--muted);line-height:1.7}
+.grid{display:grid;grid-template-columns:1.18fr .82fr;gap:16px}
+.card{padding:16px;margin-bottom:16px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+button,.fileBtn,select{font:inherit}
+button,.fileBtn{border:0;border-radius:14px;padding:11px 14px;min-height:44px;background:var(--pri);color:#fff;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;text-decoration:none}
+button:hover,.fileBtn:hover{background:var(--pri2)}
+button.secondary{background:var(--sec)}
+button.outline{background:#fff;color:var(--ink);border:1px solid var(--line)}
+button.active{background:var(--pri);color:#fff}
+input[type=file]{display:none}
+.control{border:1px solid var(--line);border-radius:16px;padding:13px;margin:11px 0;background:#fff}
+.labelrow{display:flex;justify-content:space-between;gap:10px;font-size:14px;font-weight:700;margin-bottom:8px}
+input[type=range]{width:100%}
+.modeTabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.previewGrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.previewBox{background:#eef2f7;border:1px solid var(--line);border-radius:18px;padding:10px;text-align:center}
+canvas.editor{display:block;width:100%;height:auto;background:#dfe6ef;border-radius:12px;touch-action:none}
+.previewTitle{font-weight:800;margin-bottom:8px}
+.badge{display:inline-block;font-size:12px;padding:4px 8px;border-radius:999px;background:#e8efff;color:#2449c6}
+.hidden{display:none!important}input[type=number],select{border:1px solid var(--line);border-radius:12px;padding:10px;background:#fff}.notice{padding:13px 15px;border:1px solid #f2d28d;background:#fff8e7;border-radius:15px;color:#694b00;font-size:13px;line-height:1.8}
+.actions{display:grid;gap:10px}
+.sheet{background:#fff;border:1px solid var(--line);border-radius:18px;padding:10px;overflow:auto}
+#sheetCanvas{display:block;max-width:100%;height:auto;margin:auto;background:#fff;box-shadow:0 6px 20px rgba(16,24,40,.08)}
+details{border:1px solid var(--line);border-radius:15px;padding:10px 12px;margin-top:12px}
+summary{cursor:pointer;font-weight:800}
+.templateInfo{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.infoBox{padding:10px;border-radius:13px;background:#f8fafc;border:1px solid var(--line);font-size:13px}
+@media(max-width:850px){.grid{grid-template-columns:1fr}}
+@media(max-width:560px){.previewGrid,.templateInfo{grid-template-columns:1fr}.wrap{padding:10px}.card,header{border-radius:17px}}
+@media print{
+ body{background:#fff}
+ body *{visibility:hidden}
+ #printArea,#printArea *{visibility:visible}
+ #printArea{position:absolute;left:0;top:0;width:210mm;height:297mm}
+ #sheetCanvas{width:210mm!important;height:297mm!important;box-shadow:none}
+}
+</style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="hero">
-      <h1>証明写真 40×30mm 変換アプリ</h1>
-      <p class="lead">
-        紙の証明写真をスマートフォンで撮影または選択し、四辺の自動検出、手動微調整、明るさ補正、顔位置ガイド表示を行って、
-        WEB履歴書・職務経歴書向けの40×30mm比率の画像として保存できます。
-      </p>
-    </div>
+<div class="wrap">
+<header>
+<h1>Photo Template Studio</h1>
+<p class="small">写真をグッズの形に合わせてトリミングし、実寸で印刷するためのアプリです。今回のキーチェーン専用テンプレートを初期搭載しています。画像はブラウザ内だけで処理され、外部へ送信されません。</p>
+</header>
 
-    <div class="grid">
-      <div>
-        <div class="card section">
-          <h2>1. 画像の読み込みと調整</h2>
-          <div class="buttons">
-            <label class="fake-button" for="fileInput">カメラ / 画像を開く</label>
-            <button id="autoDetectBtn" class="secondary" disabled>四辺を自動検出</button>
-            <button id="resetBtn" class="outline" disabled>リセット</button>
-          </div>
+<div class="grid">
+<main>
+<section class="card">
+<h2>1. テンプレート</h2>
+<div class="modeTabs">
+<button id="modeKeychain" class="active">キーチェーン</button>
+<button id="modeId" class="outline">証明写真 40×30mm</button>
+<button id="modeFree" class="outline">自由サイズ</button>
+</div>
+<div class="templateInfo">
+<div class="infoBox"><strong>左側</strong><br>縦40mm × 横33mm<br>写真を縦向きで配置</div>
+<div class="infoBox"><strong>右側</strong><br>縦33mm × 横24mm<br>または横24mm × 横33mm</div>
+</div>
 
-          <input id="fileInput" type="file" accept="image/*" capture="environment" />
-
-          <div class="canvas-box">
-            <canvas id="editorCanvas"></canvas>
-          </div>
-          <div id="status" class="status">紙の証明写真を撮影または選択してください。</div>
-        </div>
-
-        <div class="card section">
-          <h2>2. 補正設定</h2>
-
-          <div class="control">
-            <div class="control-top">
-              <label for="brightness">明るさ</label>
-              <div class="value"><span id="brightnessVal">0</span></div>
-            </div>
-            <input id="brightness" type="range" min="-100" max="100" step="1" value="0" />
-          </div>
-
-          <div class="control">
-            <div class="control-top">
-              <label for="contrast">コントラスト</label>
-              <div class="value"><span id="contrastVal">0</span></div>
-            </div>
-            <input id="contrast" type="range" min="-100" max="100" step="1" value="0" />
-          </div>
-
-          <div class="control">
-            <div class="control-top">
-              <label for="exposure">露出感</label>
-              <div class="value"><span id="exposureVal">0.0</span></div>
-            </div>
-            <input id="exposure" type="range" min="-3" max="3" step="0.1" value="0" />
-          </div>
-
-          <div class="control">
-            <div class="control-top">
-              <label for="rotation">回転（プレビュー用）</label>
-              <div class="value"><span id="rotationVal">0</span></div>
-            </div>
-            <input id="rotation" type="range" min="-15" max="15" step="0.5" value="0" />
-          </div>
-
-          <div class="check">
-            <input id="faceGuide" type="checkbox" checked />
-            <label for="faceGuide">顔位置ガイドを表示する</label>
-          </div>
-
-          <div class="check">
-            <input id="monoBg" type="checkbox" />
-            <label for="monoBg">背景のムラを目立ちにくくするため、モノクロ寄りにする</label>
-          </div>
-
-          <div class="control">
-            <div class="control-top">
-              <label>出力解像度（DPI）</label>
-              <div class="value"><span id="dpiInfo">300 DPI</span></div>
-            </div>
-            <div class="dpi-row">
-              <button type="button" class="outline dpi-btn" data-dpi="200">200 DPI</button>
-              <button type="button" class="outline dpi-btn active" data-dpi="300">300 DPI</button>
-              <button type="button" class="outline dpi-btn" data-dpi="350">350 DPI</button>
-            </div>
-            <div class="footer-note" id="sizeInfo">出力サイズ: 40×30mm / 472×354px</div>
-          </div>
-        </div>
-      </div>
-
-      <div>
-        <div class="card section">
-          <h2>3. 出力プレビュー</h2>
-          <div class="preview-wrap">
-            <canvas id="outputCanvas"></canvas>
-          </div>
-          <div class="buttons" style="margin-top:14px;">
-            <button id="downloadBtn" disabled>PNGを書き出す</button>
-          </div>
-          <div class="subinfo">
-            WEB履歴書では実寸より縦横比や見た目が重視されることが多いですが、提出先によって要件が異なります。
-          </div>
-        </div>
-
-        <div class="card section">
-          <div class="alert">
-            <strong>このアプリでできること</strong>
-            紙写真の取り込み、自動四辺検出、四隅の手動調整、明るさ・コントラスト補正、顔位置ガイド表示、40×30mm比率でのPNG保存に対応しています。
-          </div>
-        </div>
-
-        <div class="card section">
-          <div class="alert warn">
-            <strong>使うときのコツ</strong>
-            証明写真を白い紙や机の上に置いて真上から撮ると、自動検出の精度が上がりやすいです。影が強い場合は少し位置を変えて撮り直すと整えやすくなります。
-          </div>
-        </div>
-      </div>
+<div id="singleModeSettings" class="hidden" style="margin-top:12px">
+  <div id="idModeInfo" class="infoBox hidden"><strong>証明写真</strong><br>縦40mm × 横30mm</div>
+  <div id="freeModeInfo" class="hidden">
+    <div class="row">
+      <label>横幅 <input id="freeWidth" type="number" min="5" max="200" step="0.1" value="30"> mm</label>
+      <label>縦幅 <input id="freeHeight" type="number" min="5" max="200" step="0.1" value="40"> mm</label>
+      <label>形状
+        <select id="freeShape">
+          <option value="rect">長方形</option>
+          <option value="oval">楕円</option>
+        </select>
+      </label>
     </div>
   </div>
-
-  <script>
-    const CANVAS_W = 900;
-    const CANVAS_H = 1200;
-    const HANDLE_RADIUS = 14;
-    const ID_W_MM = 30;
-    const ID_H_MM = 40;
-
-    const fileInput = document.getElementById("fileInput");
-    const editorCanvas = document.getElementById("editorCanvas");
-    const outputCanvas = document.getElementById("outputCanvas");
-    const statusEl = document.getElementById("status");
-    const autoDetectBtn = document.getElementById("autoDetectBtn");
-    const resetBtn = document.getElementById("resetBtn");
-    const downloadBtn = document.getElementById("downloadBtn");
-
-    const brightnessInput = document.getElementById("brightness");
-    const contrastInput = document.getElementById("contrast");
-    const exposureInput = document.getElementById("exposure");
-    const rotationInput = document.getElementById("rotation");
-    const faceGuideInput = document.getElementById("faceGuide");
-    const monoBgInput = document.getElementById("monoBg");
-
-    const brightnessVal = document.getElementById("brightnessVal");
-    const contrastVal = document.getElementById("contrastVal");
-    const exposureVal = document.getElementById("exposureVal");
-    const rotationVal = document.getElementById("rotationVal");
-    const dpiInfo = document.getElementById("dpiInfo");
-    const sizeInfo = document.getElementById("sizeInfo");
-
-    const dpiButtons = Array.from(document.querySelectorAll(".dpi-btn"));
-
-    editorCanvas.width = CANVAS_W;
-    editorCanvas.height = CANVAS_H;
-
-    let image = null;
-    let corners = [];
-    let activeCorner = null;
-    let dpi = 300;
-
-    const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
-    const pxFromMm = (mm, d = dpi) => Math.round((mm / 25.4) * d);
-
-    function setStatus(text) {
-      statusEl.textContent = text;
-    }
-
-    function updateValueLabels() {
-      brightnessVal.textContent = brightnessInput.value;
-      contrastVal.textContent = contrastInput.value;
-      exposureVal.textContent = Number(exposureInput.value).toFixed(1);
-      rotationVal.textContent = rotationInput.value;
-      dpiInfo.textContent = dpi + " DPI";
-      sizeInfo.textContent = `出力サイズ: 40×30mm / ${pxFromMm(40)}×${pxFromMm(30)}px`;
-    }
-
-    function distance(a, b) {
-      return Math.hypot(a.x - b.x, a.y - b.y);
-    }
-
-    function lerp(a, b, t) {
-      return a + (b - a) * t;
-    }
-
-    function bilerpPoint(tl, tr, br, bl, u, v) {
-      const top = { x: lerp(tl.x, tr.x, u), y: lerp(tl.y, tr.y, u) };
-      const bottom = { x: lerp(bl.x, br.x, u), y: lerp(bl.y, br.y, u) };
-      return { x: lerp(top.x, bottom.x, v), y: lerp(top.y, bottom.y, v) };
-    }
-
-    function getDefaultCorners(img) {
-      const scale = Math.min(CANVAS_W / img.width, CANVAS_H / img.height);
-      const dw = img.width * scale;
-      const dh = img.height * scale;
-      const ox = (CANVAS_W - dw) / 2;
-      const oy = (CANVAS_H - dh) / 2;
-      const marginX = dw * 0.16;
-      const marginY = dh * 0.12;
-
-      return [
-        { x: ox + marginX, y: oy + marginY },
-        { x: ox + dw - marginX, y: oy + marginY },
-        { x: ox + dw - marginX, y: oy + dh - marginY },
-        { x: ox + marginX, y: oy + dh - marginY }
-      ];
-    }
-
-    function loadImageFromFile(file) {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => {
-          const img = new Image();
-          img.onload = () => resolve(img);
-          img.onerror = reject;
-          img.src = reader.result;
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
-    }
-
-    function createSourceCanvas(img) {
-      const c = document.createElement("canvas");
-      c.width = img.width;
-      c.height = img.height;
-      c.getContext("2d").drawImage(img, 0, 0);
-      return c;
-    }
-
-    function sampleBilinear(src, sw, sh, x, y) {
-      const x0 = clamp(Math.floor(x), 0, sw - 1);
-      const y0 = clamp(Math.floor(y), 0, sh - 1);
-      const x1 = clamp(x0 + 1, 0, sw - 1);
-      const y1 = clamp(y0 + 1, 0, sh - 1);
-      const dx = x - x0;
-      const dy = y - y0;
-
-      const idx = (xx, yy) => (yy * sw + xx) * 4;
-
-      const i00 = idx(x0, y0);
-      const i10 = idx(x1, y0);
-      const i01 = idx(x0, y1);
-      const i11 = idx(x1, y1);
-
-      const out = [0, 0, 0, 0];
-
-      for (let c = 0; c < 4; c++) {
-        const v00 = src[i00 + c];
-        const v10 = src[i10 + c];
-        const v01 = src[i01 + c];
-        const v11 = src[i11 + c];
-        const v0 = v00 * (1 - dx) + v10 * dx;
-        const v1 = v01 * (1 - dx) + v11 * dx;
-        out[c] = v0 * (1 - dy) + v1 * dy;
-      }
-
-      return out;
-    }
-
-    function drawPerspectiveCrop() {
-      if (!image || corners.length !== 4) return;
-
-      const outW = pxFromMm(30);
-      const outH = pxFromMm(40);
-
-      outputCanvas.width = outW;
-      outputCanvas.height = outH;
-
-      const sourceCanvas = createSourceCanvas(image);
-      const srcCtx = sourceCanvas.getContext("2d", { willReadFrequently: true });
-      const srcImg = srcCtx.getImageData(0, 0, sourceCanvas.width, sourceCanvas.height);
-      const src = srcImg.data;
-
-      const outCtx = outputCanvas.getContext("2d", { willReadFrequently: true });
-      const outImg = outCtx.createImageData(outW, outH);
-
-      const scaleX = image.width / CANVAS_W;
-      const scaleY = image.height / CANVAS_H;
-
-      const mapped = corners.map(p => ({
-        x: p.x * scaleX,
-        y: p.y * scaleY
-      }));
-
-      const tl = mapped[0];
-      const tr = mapped[1];
-      const br = mapped[2];
-      const bl = mapped[3];
-
-      const brightness = Number(brightnessInput.value);
-      const contrast = Number(contrastInput.value);
-      const exposure = Number(exposureInput.value);
-      const mono = monoBgInput.checked;
-      const contrastFactor = (259 * (contrast + 255)) / (255 * (259 - contrast || 1));
-
-      for (let y = 0; y < outH; y++) {
-        for (let x = 0; x < outW; x++) {
-          const u = x / ((outW - 1) || 1);
-          const v = y / ((outH - 1) || 1);
-          const p = bilerpPoint(tl, tr, br, bl, u, v);
-          let [r, g, b, a] = sampleBilinear(src, sourceCanvas.width, sourceCanvas.height, p.x, p.y);
-
-          r += brightness + exposure * 40;
-          g += brightness + exposure * 40;
-          b += brightness + exposure * 40;
-
-          r = contrastFactor * (r - 128) + 128;
-          g = contrastFactor * (g - 128) + 128;
-          b = contrastFactor * (b - 128) + 128;
-
-          if (mono) {
-            const lum = r * 0.299 + g * 0.587 + b * 0.114;
-            r = lum;
-            g = lum;
-            b = lum;
-          }
-
-          const i = (y * outW + x) * 4;
-          outImg.data[i] = clamp(Math.round(r), 0, 255);
-          outImg.data[i + 1] = clamp(Math.round(g), 0, 255);
-          outImg.data[i + 2] = clamp(Math.round(b), 0, 255);
-          outImg.data[i + 3] = clamp(Math.round(a), 0, 255);
-        }
-      }
-
-      outCtx.putImageData(outImg, 0, 0);
-    }
-
-    function drawEditor() {
-      const ctx = editorCanvas.getContext("2d");
-      ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
-
-      if (!image) {
-        ctx.fillStyle = "#dbe4ef";
-        ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
-        ctx.fillStyle = "#5c6b7a";
-        ctx.font = "24px sans-serif";
-        ctx.textAlign = "center";
-        ctx.fillText("画像を読み込むとここに表示されます", CANVAS_W / 2, CANVAS_H / 2);
-        return;
-      }
-
-      const scale = Math.min(CANVAS_W / image.width, CANVAS_H / image.height);
-      const dw = image.width * scale;
-      const dh = image.height * scale;
-      const ox = (CANVAS_W - dw) / 2;
-      const oy = (CANVAS_H - dh) / 2;
-
-      ctx.save();
-      ctx.translate(CANVAS_W / 2, CANVAS_H / 2);
-      ctx.rotate(Number(rotationInput.value) * Math.PI / 180);
-      ctx.translate(-CANVAS_W / 2, -CANVAS_H / 2);
-      ctx.filter = `brightness(${100 + Number(brightnessInput.value) * 0.4}%) contrast(${100 + Number(contrastInput.value) * 0.6}%)`;
-      ctx.drawImage(image, ox, oy, dw, dh);
-      ctx.restore();
-      ctx.filter = "none";
-
-      if (corners.length === 4) {
-        ctx.save();
-        ctx.lineWidth = 3;
-        ctx.strokeStyle = "#16a34a";
-        ctx.fillStyle = "rgba(22,163,74,0.15)";
-        ctx.beginPath();
-        ctx.moveTo(corners[0].x, corners[0].y);
-        ctx.lineTo(corners[1].x, corners[1].y);
-        ctx.lineTo(corners[2].x, corners[2].y);
-        ctx.lineTo(corners[3].x, corners[3].y);
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-        ctx.restore();
-
-        if (faceGuideInput.checked) {
-          drawFaceGuide(ctx);
-        }
-
-        corners.forEach((p, i) => {
-          ctx.save();
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, HANDLE_RADIUS, 0, Math.PI * 2);
-          ctx.fillStyle = activeCorner === i ? "#0f172a" : "#ffffff";
-          ctx.strokeStyle = "#0f172a";
-          ctx.lineWidth = 3;
-          ctx.fill();
-          ctx.stroke();
-
-          ctx.fillStyle = activeCorner === i ? "#ffffff" : "#0f172a";
-          ctx.font = "bold 12px sans-serif";
-          ctx.textAlign = "center";
-          ctx.textBaseline = "middle";
-          ctx.fillText(String(i + 1), p.x, p.y + 1);
-          ctx.restore();
-        });
-
-        ctx.save();
-        ctx.fillStyle = "rgba(15,23,42,0.72)";
-        ctx.fillRect(12, 12, 470, 78);
-        ctx.fillStyle = "#fff";
-        ctx.font = "14px sans-serif";
-        ctx.fillText("四隅をドラッグして証明写真の端に合わせてください", 24, 36);
-        ctx.fillText(`露出 ${Number(exposureInput.value).toFixed(1)} / 明るさ ${brightnessInput.value} / コントラスト ${contrastInput.value}`, 24, 58);
-        ctx.fillText(faceGuideInput.checked ? "顔位置ガイド表示中" : "顔位置ガイド非表示", 24, 80);
-        ctx.restore();
-      }
-
-      drawPerspectiveCrop();
-    }
-
-    function drawFaceGuide(ctx) {
-      if (corners.length !== 4) return;
-
-      const tl = corners[0];
-      const tr = corners[1];
-      const br = corners[2];
-      const bl = corners[3];
-
-      const rect = {
-        x: tl.x,
-        y: tl.y,
-        w: tr.x - tl.x,
-        h: bl.y - tl.y
-      };
-
-      const headTopY = rect.y + rect.h * 0.12;
-      const eyeLineY = rect.y + rect.h * 0.38;
-      const chinBottomY = rect.y + rect.h * 0.86;
-      const centerX = rect.x + rect.w * 0.5;
-
-      ctx.save();
-      ctx.strokeStyle = "rgba(37,99,235,0.95)";
-      ctx.lineWidth = 2;
-      ctx.setLineDash([8, 6]);
-
-      [headTopY, eyeLineY, chinBottomY].forEach(y => {
-        ctx.beginPath();
-        ctx.moveTo(rect.x, y);
-        ctx.lineTo(rect.x + rect.w, y);
-        ctx.stroke();
-      });
-
-      ctx.beginPath();
-      ctx.moveTo(centerX, rect.y + rect.h * 0.08);
-      ctx.lineTo(centerX, rect.y + rect.h * 0.92);
-      ctx.stroke();
-
-      ctx.setLineDash([]);
-      ctx.beginPath();
-      ctx.ellipse(centerX, rect.y + rect.h * 0.49, rect.w * 0.28, rect.h * 0.33, 0, 0, Math.PI * 2);
-      ctx.stroke();
-
-      ctx.fillStyle = "rgba(37,99,235,0.95)";
-      ctx.font = "12px sans-serif";
-      ctx.fillText("頭頂目安", rect.x + 8, headTopY - 6);
-      ctx.fillText("目線目安", rect.x + 8, eyeLineY - 6);
-      ctx.fillText("あご下目安", rect.x + 8, chinBottomY - 6);
-      ctx.restore();
-    }
-
-    function detectPhotoEdges(img) {
-      const sampleMax = 1400;
-      const scale = Math.min(1, sampleMax / Math.max(img.width, img.height));
-      const w = Math.max(64, Math.round(img.width * scale));
-      const h = Math.max(64, Math.round(img.height * scale));
-
-      const c = document.createElement("canvas");
-      c.width = w;
-      c.height = h;
-      const ctx = c.getContext("2d", { willReadFrequently: true });
-      ctx.drawImage(img, 0, 0, w, h);
-
-      const { data } = ctx.getImageData(0, 0, w, h);
-
-      const gray = new Float32Array(w * h);
-      for (let i = 0, p = 0; i < gray.length; i++, p += 4) {
-        gray[i] = data[p] * 0.299 + data[p + 1] * 0.587 + data[p + 2] * 0.114;
-      }
-
-      const edgeCols = new Float32Array(w);
-      const edgeRows = new Float32Array(h);
-
-      for (let x = 2; x < w - 2; x++) {
-        let sum = 0;
-        for (let y = 2; y < h - 2; y++) {
-          const idx = y * w + x;
-          const gx = -gray[idx - 2] - 2 * gray[idx - 1] + 2 * gray[idx + 1] + gray[idx + 2];
-          sum += Math.abs(gx);
-        }
-        edgeCols[x] = sum / h;
-      }
-
-      for (let y = 2; y < h - 2; y++) {
-        let sum = 0;
-        for (let x = 2; x < w - 2; x++) {
-          const idx = y * w + x;
-          const gy = -gray[idx - 2 * w] - 2 * gray[idx - w] + 2 * gray[idx + w] + gray[idx + 2 * w];
-          sum += Math.abs(gy);
-        }
-        edgeRows[y] = sum / w;
-      }
-
-      function smooth(arr, radius = 5) {
-        const out = new Float32Array(arr.length);
-        for (let i = 0; i < arr.length; i++) {
-          let sum = 0;
-          let count = 0;
-          for (let k = -radius; k <= radius; k++) {
-            const j = i + k;
-            if (j >= 0 && j < arr.length) {
-              sum += arr[j];
-              count++;
-            }
-          }
-          out[i] = sum / count;
-        }
-        return out;
-      }
-
-      function pickTopPeaks(arr, start, end, count, minGap) {
-        const peaks = [];
-        for (let i = start; i < end; i++) {
-          peaks.push({ index: i, score: arr[i] });
-        }
-        peaks.sort((a, b) => b.score - a.score);
-
-        const selected = [];
-        for (const p of peaks) {
-          if (selected.every(s => Math.abs(s.index - p.index) >= minGap)) {
-            selected.push(p);
-            if (selected.length >= count) break;
-          }
-        }
-        return selected.sort((a, b) => a.index - b.index);
-      }
-
-      const cols = smooth(edgeCols, 5);
-      const rows = smooth(edgeRows, 5);
-
-      const leftCandidates = pickTopPeaks(cols, Math.floor(w * 0.03), Math.floor(w * 0.45), 8, Math.floor(w * 0.03));
-      const rightCandidates = pickTopPeaks(cols, Math.floor(w * 0.55), Math.floor(w * 0.97), 8, Math.floor(w * 0.03));
-      const topCandidates = pickTopPeaks(rows, Math.floor(h * 0.03), Math.floor(h * 0.45), 8, Math.floor(h * 0.03));
-      const bottomCandidates = pickTopPeaks(rows, Math.floor(h * 0.55), Math.floor(h * 0.97), 8, Math.floor(h * 0.03));
-
-      const targetAspect = 30 / 40;
-      let best = null;
-
-      for (const l of leftCandidates) {
-        for (const r of rightCandidates) {
-          for (const t of topCandidates) {
-            for (const b of bottomCandidates) {
-              const rectW = r.index - l.index;
-              const rectH = b.index - t.index;
-              if (rectW < w * 0.18 || rectH < h * 0.18) continue;
-
-              const aspect = rectW / rectH;
-              const aspectPenalty = Math.abs(aspect - targetAspect) * 900;
-              const edgeScore = l.score + r.score + t.score + b.score;
-
-              const marginPenalty =
-                Math.abs((l.index / w) - 0.15) * 30 +
-                Math.abs((1 - r.index / w) - 0.15) * 30 +
-                Math.abs((t.index / h) - 0.12) * 30 +
-                Math.abs((1 - b.index / h) - 0.12) * 30;
-
-              const centerX = (l.index + r.index) / 2 / w;
-              const centerY = (t.index + b.index) / 2 / h;
-              const centerPenalty = (Math.abs(centerX - 0.5) + Math.abs(centerY - 0.5)) * 80;
-
-              const score = edgeScore - aspectPenalty - marginPenalty - centerPenalty;
-
-              if (!best || score > best.score) {
-                best = {
-                  score,
-                  corners: [
-                    { x: l.index, y: t.index },
-                    { x: r.index, y: t.index },
-                    { x: r.index, y: b.index },
-                    { x: l.index, y: b.index }
-                  ],
-                  sampleWidth: w,
-                  sampleHeight: h
-                };
-              }
-            }
-          }
-        }
-      }
-
-      return best;
-    }
-
-    function mapDetectedCornersToPreview(detected) {
-      if (!detected || !image) return null;
-
-      const scale = Math.min(CANVAS_W / image.width, CANVAS_H / image.height);
-      const dw = image.width * scale;
-      const dh = image.height * scale;
-      const ox = (CANVAS_W - dw) / 2;
-      const oy = (CANVAS_H - dh) / 2;
-
-      const sx = dw / detected.sampleWidth;
-      const sy = dh / detected.sampleHeight;
-
-      return detected.corners.map(p => ({
-        x: ox + p.x * sx,
-        y: oy + p.y * sy
-      }));
-    }
-
-    function resetAdjustments() {
-      if (!image) return;
-      corners = getDefaultCorners(image);
-      brightnessInput.value = 0;
-      contrastInput.value = 0;
-      exposureInput.value = 0;
-      rotationInput.value = 0;
-      monoBgInput.checked = false;
-      faceGuideInput.checked = true;
-      updateValueLabels();
-      drawEditor();
-      setStatus("補正をリセットしました。");
-    }
-
-    function enableControls() {
-      autoDetectBtn.disabled = false;
-      resetBtn.disabled = false;
-      downloadBtn.disabled = false;
-    }
-
-    function handlePointerPos(e) {
-      const rect = editorCanvas.getBoundingClientRect();
-      const scaleX = editorCanvas.width / rect.width;
-      const scaleY = editorCanvas.height / rect.height;
-
-      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-
-      return {
-        x: (clientX - rect.left) * scaleX,
-        y: (clientY - rect.top) * scaleY
-      };
-    }
-
-    function pointerDown(e) {
-      if (!corners.length) return;
-      const p = handlePointerPos(e);
-      let found = null;
-
-      corners.forEach((c, i) => {
-        if (distance(c, p) <= HANDLE_RADIUS * 1.8) found = i;
-      });
-
-      activeCorner = found;
-      if (found !== null) e.preventDefault();
-      drawEditor();
-    }
-
-    function pointerMove(e) {
-      if (activeCorner === null) return;
-      const p = handlePointerPos(e);
-      corners[activeCorner] = {
-        x: clamp(p.x, 0, CANVAS_W),
-        y: clamp(p.y, 0, CANVAS_H)
-      };
-      e.preventDefault();
-      drawEditor();
-    }
-
-    function pointerUp() {
-      activeCorner = null;
-      drawEditor();
-    }
-
-    fileInput.addEventListener("change", async (e) => {
-      const file = e.target.files && e.target.files[0];
-      if (!file) return;
-
-      try {
-        image = await loadImageFromFile(file);
-        corners = getDefaultCorners(image);
-        enableControls();
-        updateValueLabels();
-        drawEditor();
-        setStatus("画像を読み込みました。必要なら四辺を自動検出してください。");
-      } catch (err) {
-        setStatus("画像の読み込みに失敗しました。");
-      }
-    });
-
-    autoDetectBtn.addEventListener("click", () => {
-      if (!image) return;
-      const detected = detectPhotoEdges(image);
-      const mapped = mapDetectedCornersToPreview(detected);
-
-      if (mapped) {
-        corners = mapped;
-        drawEditor();
-        setStatus("自動で四辺を検出しました。必要に応じて四隅を少し微調整してください。");
-      } else {
-        setStatus("自動検出が難しかったため、手動で四隅を合わせてください。");
-      }
-    });
-
-    resetBtn.addEventListener("click", resetAdjustments);
-
-    downloadBtn.addEventListener("click", () => {
-      if (!image) return;
-      drawPerspectiveCrop();
-      const a = document.createElement("a");
-      a.href = outputCanvas.toDataURL("image/png");
-      a.download = `id-photo-40x30mm-${dpi}dpi.png`;
-      a.click();
-      setStatus("PNGを書き出しました。");
-    });
-
-    [brightnessInput, contrastInput, exposureInput, rotationInput, faceGuideInput, monoBgInput].forEach(el => {
-      el.addEventListener("input", () => {
-        updateValueLabels();
-        drawEditor();
-      });
-      el.addEventListener("change", () => {
-        updateValueLabels();
-        drawEditor();
-      });
-    });
-
-    dpiButtons.forEach(btn => {
-      btn.addEventListener("click", () => {
-        dpi = Number(btn.dataset.dpi);
-        dpiButtons.forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
-        updateValueLabels();
-        drawEditor();
-      });
-    });
-
-    editorCanvas.addEventListener("mousedown", pointerDown);
-    editorCanvas.addEventListener("mousemove", pointerMove);
-    window.addEventListener("mouseup", pointerUp);
-
-    editorCanvas.addEventListener("touchstart", pointerDown, { passive: false });
-    editorCanvas.addEventListener("touchmove", pointerMove, { passive: false });
-    window.addEventListener("touchend", pointerUp);
-
-    updateValueLabels();
-    drawEditor();
-  </script>
+</div>
+</section>
+
+<section class="card">
+<h2>2. 写真を選ぶ</h2>
+<div id="twoPhotoInputs" class="previewGrid">
+<div>
+<div class="previewTitle">左側 <span class="badge">左側の写真</span></div>
+<label class="fileBtn" for="leftFile">左の写真を選択</label>
+<input id="leftFile" type="file" accept="image/*">
+</div>
+<div>
+<div class="previewTitle">右側 <span class="badge">右側の写真</span></div>
+<label class="fileBtn" for="rightFile">右の写真を選択</label>
+<input id="rightFile" type="file" accept="image/*">
+</div>
+</div>
+<div id="singlePhotoInput" class="hidden">
+  <label class="fileBtn" for="singleFile">写真を選択</label>
+  <input id="singleFile" type="file" accept="image/*">
+</div>
+</section>
+
+<section class="card">
+<h2>3. トリミングを調整</h2>
+<div id="twoEditors" class="previewGrid">
+<div class="previewBox">
+<div class="previewTitle">左側</div>
+<canvas id="leftCanvas" class="editor" width="660" height="800"></canvas>
+<div class="small">ドラッグで位置を調整</div>
+<div class="control">
+<div class="labelrow"><span>拡大</span><span id="leftScaleVal">100%</span></div>
+<input id="leftScale" type="range" min="50" max="300" value="100">
+</div>
+<div class="control">
+<div class="labelrow"><span>回転</span><span id="leftRotVal">0°</span></div>
+<input id="leftRot" type="range" min="-180" max="180" value="0">
+</div>
+<button id="leftReset" class="outline">左をリセット</button>
+</div>
+
+<div class="previewBox">
+<div class="previewTitle">右側</div>
+<div class="modeTabs">
+<button id="rightPortrait" class="outline active">縦</button>
+<button id="rightLandscape" class="outline">横</button>
+</div>
+<canvas id="rightCanvas" class="editor" width="660" height="800"></canvas>
+<div class="small">ドラッグで位置を調整</div>
+<div class="control">
+<div class="labelrow"><span>拡大</span><span id="rightScaleVal">100%</span></div>
+<input id="rightScale" type="range" min="50" max="300" value="100">
+</div>
+<div class="control">
+<div class="labelrow"><span>回転</span><span id="rightRotVal">0°</span></div>
+<input id="rightRot" type="range" min="-180" max="180" value="0">
+</div>
+<div class="row">
+<button id="rightRotate90" class="secondary">90°回転</button>
+<button id="rightReset" class="outline">右をリセット</button>
+</div>
+</div>
+</div>
+
+<div id="singleEditor" class="previewBox hidden">
+  <div class="previewTitle" id="singleEditorTitle">証明写真</div>
+  <canvas id="singleCanvas" class="editor" width="660" height="800"></canvas>
+  <div class="small">ドラッグで位置を調整</div>
+  <div class="control">
+    <div class="labelrow"><span>拡大</span><span id="singleScaleVal">100%</span></div>
+    <input id="singleScale" type="range" min="50" max="300" value="100">
+  </div>
+  <div class="control">
+    <div class="labelrow"><span>回転</span><span id="singleRotVal">0°</span></div>
+    <input id="singleRot" type="range" min="-180" max="180" value="0">
+  </div>
+  <div class="row">
+    <button id="singleRotate90" class="secondary">90°回転</button>
+    <button id="singleReset" class="outline">リセット</button>
+  </div>
+</div>
+
+<details>
+<summary>形と余白の微調整</summary>
+<div class="control">
+<div class="labelrow"><span>全体を小さくする</span><span id="shrinkVal">0.3mm</span></div>
+<input id="shrink" type="range" min="0" max="1.2" step="0.1" value="0.3">
+<div class="small">初期値は貼りやすさ重視の0.3mmです。</div>
+</div>
+<div id="keychainFineControls">
+<div class="control">
+<div class="labelrow"><span>左側の楕円らしさ</span><span id="leftOvalVal">85%</span></div>
+<input id="leftOval" type="range" min="65" max="100" value="85">
+</div>
+<div class="control">
+<div class="labelrow"><span>右側の楕円らしさ</span><span id="rightOvalVal">92%</span></div>
+<input id="rightOval" type="range" min="70" max="100" value="92">
+</div>
+<div class="control">
+<div class="labelrow"><span>左側の切り欠き深さ</span><span id="notchDepthVal">3.0mm</span></div>
+<input id="notchDepth" type="range" min="0" max="6" step="0.1" value="3">
+</div>
+<div class="control">
+<div class="labelrow"><span>左側の切り欠き高さ</span><span id="notchHeightVal">7.0mm</span></div>
+<input id="notchHeight" type="range" min="3" max="15" step="0.5" value="7">
+</div>
+</div>
+</details>
+</section>
+</main>
+
+<aside>
+<section class="card">
+<h2>4. A4印刷シート</h2>
+<div class="control">
+<div class="labelrow"><span>セット数 / 枚数</span><span id="copiesVal">4</span></div>
+<div class="row">
+<button id="copiesMinus" class="outline" type="button">−</button>
+<input id="copiesInput" type="number" min="1" max="30" value="4" style="width:90px;text-align:center">
+<button id="copiesPlus" class="outline" type="button">＋</button>
+</div>
+</div>
+<div class="row" style="margin-bottom:10px">
+<label><input id="cutLine" type="checkbox" checked> カット線</label>
+<label><input id="labels" type="checkbox" checked> 左右ラベル</label>
+</div>
+<div id="printArea" class="sheet">
+<canvas id="sheetCanvas" width="1240" height="1754"></canvas>
+</div>
+<div class="actions" style="margin-top:12px">
+<button id="downloadSheet">A4印刷用PNGを保存</button>
+<button id="printBtn" class="secondary">このシートを印刷</button>
+</div>
+<p class="small">印刷時は「実際のサイズ」「100%」を選び、「用紙に合わせる」はオフにしてください。</p>
+</section>
+
+<div class="notice">
+<strong>まずは普通紙で確認してください</strong><br>
+切り抜いて実物へ当て、大きければ「全体を小さくする」を0.4〜0.6mmへ調整してください。形が丸すぎる・平たすぎる場合は「楕円らしさ」を調整できます。
+</div>
+</aside>
+</div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const MM_TO_SHEET=1240/210;
+const state={
+ left:{img:null,x:0,y:0,scale:1,rot:0},
+ right:{img:null,x:0,y:0,scale:1,rot:0,landscape:false},
+ single:{img:null,x:0,y:0,scale:1,rot:0},
+ mode:'keychain',freeW:30,freeH:40,freeShape:'rect',
+ shrink:.3,leftOval:.85,rightOval:.92,notchDepth:3,notchHeight:7,copies:4
+};
+
+function loadFile(file,side){
+ const r=new FileReader();
+ r.onload=()=>{const im=new Image();im.onload=()=>{state[side].img=im;resetSide(side);renderAll()};im.src=r.result};
+ r.readAsDataURL(file);
+}
+$('leftFile').onchange=e=>e.target.files[0]&&loadFile(e.target.files[0],'left');
+$('rightFile').onchange=e=>e.target.files[0]&&loadFile(e.target.files[0],'right');
+$('singleFile').onchange=e=>e.target.files[0]&&loadFile(e.target.files[0],'single');
+
+function resetSide(side){
+ const s=state[side];s.x=0;s.y=0;s.scale=1;s.rot=0;
+ $(side+'Scale').value=100;$(side+'Rot').value=0;updateLabels();
+}
+$('leftReset').onclick=()=>{resetSide('left');renderAll()};
+$('rightReset').onclick=()=>{resetSide('right');renderAll()};
+$('singleReset').onclick=()=>{resetSide('single');renderAll()};
+$('rightRotate90').onclick=()=>{state.right.rot=(state.right.rot+90)%360;$('rightRot').value=((state.right.rot+180)%360)-180;updateLabels();renderAll()};
+$('singleRotate90').onclick=()=>{state.single.rot=(state.single.rot+90)%360;$('singleRot').value=((state.single.rot+180)%360)-180;updateLabels();renderAll()};
+
+function ovalPath(ctx,x,y,w,h,ovalness=1){
+ const k=0.5522847498;
+ const rx=w/2,ry=h/2;
+ const cx=x+rx,cy=y+ry;
+ const flat=Math.max(0,1-ovalness);
+ const topFlat=rx*flat*.42;
+ const sideFlat=ry*flat*.22;
+ ctx.beginPath();
+ ctx.moveTo(cx-topFlat,y);
+ ctx.bezierCurveTo(cx-topFlat-rx*k*(1-flat*.2),y,x,y+ry*k*(1-flat*.15),x,cy-sideFlat);
+ ctx.lineTo(x,cy+sideFlat);
+ ctx.bezierCurveTo(x,y+h-ry*k*(1-flat*.15),cx-topFlat-rx*k*(1-flat*.2),y+h,cx-topFlat,y+h);
+ ctx.lineTo(cx+topFlat,y+h);
+ ctx.bezierCurveTo(cx+topFlat+rx*k*(1-flat*.2),y+h,x+w,y+h-ry*k*(1-flat*.15),x+w,cy+sideFlat);
+ ctx.lineTo(x+w,cy-sideFlat);
+ ctx.bezierCurveTo(x+w,y+ry*k*(1-flat*.15),cx+topFlat+rx*k*(1-flat*.2),y,cx+topFlat,y);
+ ctx.closePath();
+}
+function leftPhotoPath(ctx,x,y,w,h,ovalness,depthPx,heightPx){
+ const cy=y+h/2,top=cy-heightPx/2,bottom=cy+heightPx/2;
+ const k=0.5522847498,rx=w/2,ry=h/2,cx=x+rx;
+ const flat=Math.max(0,1-ovalness);
+ const topFlat=rx*flat*.42,sideFlat=ry*flat*.22;
+ ctx.beginPath();
+ ctx.moveTo(cx-topFlat,y);
+ ctx.bezierCurveTo(cx-topFlat-rx*k*(1-flat*.2),y,x,y+ry*k*(1-flat*.15),x,cy-sideFlat);
+ ctx.lineTo(x,bottom);
+ ctx.lineTo(x+depthPx,bottom);
+ ctx.lineTo(x+depthPx,top);
+ ctx.lineTo(x,top);
+ ctx.lineTo(x,cy-sideFlat);
+ ctx.bezierCurveTo(x,y+ry*k*(1-flat*.15),cx-topFlat-rx*k*(1-flat*.2),y,cx-topFlat,y);
+ ctx.lineTo(cx+topFlat,y);
+ ctx.bezierCurveTo(cx+topFlat+rx*k*(1-flat*.2),y,x+w,y+ry*k*(1-flat*.15),x+w,cy-sideFlat);
+ ctx.lineTo(x+w,cy+sideFlat);
+ ctx.bezierCurveTo(x+w,y+h-ry*k*(1-flat*.15),cx+topFlat+rx*k*(1-flat*.2),y+h,cx+topFlat,y+h);
+ ctx.lineTo(cx-topFlat,y+h);
+ ctx.bezierCurveTo(cx-topFlat-rx*k*(1-flat*.2),y+h,x,y+h-ry*k*(1-flat*.15),x,cy+sideFlat);
+ ctx.lineTo(x,bottom);
+ ctx.closePath();
+}
+function rectPath(ctx,x,y,w,h){ctx.beginPath();ctx.rect(x,y,w,h);ctx.closePath()}
+function drawPlaceholder(ctx,w,h,text){
+ ctx.fillStyle='#dfe6ef';ctx.fillRect(0,0,w,h);ctx.fillStyle='#64748b';ctx.font='24px sans-serif';ctx.textAlign='center';ctx.fillText(text,w/2,h/2);
+}
+function singleSpec(){
+ if(state.mode==='id')return {w:30,h:40,shape:'rect',label:'証明写真'};
+ return {w:state.freeW,h:state.freeH,shape:state.freeShape,label:'自由サイズ'};
+}
+function applyShape(ctx,side,x,y,w,h){
+ if(side==='left')leftPhotoPath(ctx,x,y,w,h,state.leftOval,state.notchDepth*(w/33),state.notchHeight*(h/40));
+ else if(side==='right')ovalPath(ctx,x,y,w,h,state.rightOval);
+ else if(singleSpec().shape==='oval')ovalPath(ctx,x,y,w,h,1);
+ else rectPath(ctx,x,y,w,h);
+}
+function drawPhotoCanvas(canvas,side){
+ const ctx=canvas.getContext('2d'),s=state[side],cw=canvas.width,ch=canvas.height;
+ ctx.clearRect(0,0,cw,ch);drawPlaceholder(ctx,cw,ch,'写真を選択してください');
+ let mmW,mmH;
+ if(side==='left'){mmW=33;mmH=40}
+ else if(side==='right'){mmW=s.landscape?33:24;mmH=s.landscape?24:33}
+ else{const sp=singleSpec();mmW=sp.w;mmH=sp.h}
+ const pad=48,sc=Math.min((cw-pad*2)/mmW,(ch-pad*2)/mmH),w=mmW*sc,h=mmH*sc,x=(cw-w)/2,y=(ch-h)/2;
+ ctx.save();applyShape(ctx,side,x,y,w,h);ctx.clip();
+ if(s.img){
+  const base=Math.max(w/s.img.width,h/s.img.height)*s.scale;
+  ctx.translate(x+w/2+s.x,y+h/2+s.y);ctx.rotate(s.rot*Math.PI/180);
+  ctx.drawImage(s.img,-s.img.width*base/2,-s.img.height*base/2,s.img.width*base,s.img.height*base);
+ }else{ctx.fillStyle='#dfe6ef';ctx.fillRect(x,y,w,h)}
+ ctx.restore();
+ ctx.save();ctx.strokeStyle='#315efb';ctx.lineWidth=4;ctx.setLineDash([10,7]);
+ applyShape(ctx,side,x,y,w,h);ctx.stroke();ctx.restore();
+}
+function renderPiece(ctx,side,x,y,mmW,mmH){
+ const s=state[side],sh=state.shrink,w=(mmW-sh)*MM_TO_SHEET,h=(mmH-sh)*MM_TO_SHEET;
+ ctx.save();
+ applyShape(ctx,side,x,y,w,h);
+ ctx.clip();ctx.fillStyle='#fff';ctx.fillRect(x,y,w,h);
+ if(s.img){
+   const base=Math.max(w/s.img.width,h/s.img.height)*s.scale;
+   const editorScale=Math.min((660-96)/mmW,(800-96)/mmH);
+   const ratio=w/(mmW*editorScale);
+   ctx.translate(x+w/2+s.x*ratio,y+h/2+s.y*ratio);ctx.rotate(s.rot*Math.PI/180);
+   ctx.drawImage(s.img,-s.img.width*base/2,-s.img.height*base/2,s.img.width*base,s.img.height*base);
+ }
+ ctx.restore();
+ if($('cutLine').checked){
+   ctx.save();ctx.strokeStyle='#7b8798';ctx.lineWidth=1.2;ctx.setLineDash([5,4]);
+   applyShape(ctx,side,x,y,w,h);
+   ctx.stroke();ctx.restore();
+ }
+ return {w,h};
+}
+function renderSheet(){
+ const c=$('sheetCanvas'),ctx=c.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);
+ const margin=15*MM_TO_SHEET,gap=8*MM_TO_SHEET,rowGap=12*MM_TO_SHEET;
+ let x=margin,y=margin;
+ if(state.mode==='keychain'){
+  for(let i=0;i<state.copies;i++){
+   const rW=state.right.landscape?33:24,rH=state.right.landscape?24:33;
+   const lw=(33-state.shrink)*MM_TO_SHEET,lh=(40-state.shrink)*MM_TO_SHEET;
+   const rw=(rW-state.shrink)*MM_TO_SHEET,rh=(rH-state.shrink)*MM_TO_SHEET;
+   const setW=lw+gap+rw,setH=Math.max(lh,rh);
+   if(x+setW>c.width-margin){x=margin;y+=setH+rowGap}
+   if(y+setH>c.height-margin)break;
+   const a=renderPiece(ctx,'left',x,y,33,40);
+   const b=renderPiece(ctx,'right',x+a.w+gap,y,rW,rH);
+   if($('labels').checked){ctx.fillStyle='#526071';ctx.font='18px sans-serif';ctx.textAlign='center';ctx.fillText('左',x+a.w/2,y+a.h+22);ctx.fillText('右',x+a.w+gap+b.w/2,y+b.h+22)}
+   x+=setW+gap;
+  }
+ }else{
+  const sp=singleSpec(),iw=(sp.w-state.shrink)*MM_TO_SHEET,ih=(sp.h-state.shrink)*MM_TO_SHEET;
+  for(let i=0;i<state.copies;i++){
+   if(x+iw>c.width-margin){x=margin;y+=ih+rowGap}
+   if(y+ih>c.height-margin)break;
+   const a=renderPiece(ctx,'single',x,y,sp.w,sp.h);
+   if($('labels').checked){ctx.fillStyle='#526071';ctx.font='18px sans-serif';ctx.textAlign='center';ctx.fillText(sp.label,x+a.w/2,y+a.h+22)}
+   x+=iw+gap;
+  }
+ }
+}
+function renderAll(){
+ if(state.mode==='keychain'){drawPhotoCanvas($('leftCanvas'),'left');drawPhotoCanvas($('rightCanvas'),'right')}
+ else drawPhotoCanvas($('singleCanvas'),'single');
+ renderSheet();
+}
+function updateLabels(){
+ $('leftScaleVal').textContent=Math.round(state.left.scale*100)+'%';
+ $('rightScaleVal').textContent=Math.round(state.right.scale*100)+'%';
+ $('singleScaleVal').textContent=Math.round(state.single.scale*100)+'%';
+ $('leftRotVal').textContent=Math.round(state.left.rot)+'°';
+ $('rightRotVal').textContent=Math.round(state.right.rot)+'°';
+ $('singleRotVal').textContent=Math.round(state.single.rot)+'°';
+ $('shrinkVal').textContent=state.shrink.toFixed(1)+'mm';
+ $('leftOvalVal').textContent=Math.round(state.leftOval*100)+'%';
+ $('rightOvalVal').textContent=Math.round(state.rightOval*100)+'%';
+ $('notchDepthVal').textContent=state.notchDepth.toFixed(1)+'mm';
+ $('notchHeightVal').textContent=state.notchHeight.toFixed(1)+'mm';
+ $('copiesVal').textContent=state.copies;
+ $('copiesInput').value=state.copies;
+}
+function setMode(mode){
+ state.mode=mode;
+ ['modeKeychain','modeId','modeFree'].forEach(id=>{$(id).classList.remove('active');$(id).classList.add('outline')});
+ const active=mode==='keychain'?'modeKeychain':mode==='id'?'modeId':'modeFree';
+ $(active).classList.add('active');
+ $('keychainInfo').classList.toggle('hidden',mode!=='keychain');
+ $('singleModeSettings').classList.toggle('hidden',mode==='keychain');
+ $('idModeInfo').classList.toggle('hidden',mode!=='id');
+ $('freeModeInfo').classList.toggle('hidden',mode!=='free');
+ $('twoPhotoInputs').classList.toggle('hidden',mode!=='keychain');
+ $('singlePhotoInput').classList.toggle('hidden',mode==='keychain');
+ $('twoEditors').classList.toggle('hidden',mode!=='keychain');
+ $('singleEditor').classList.toggle('hidden',mode==='keychain');
+ $('keychainFineControls').classList.toggle('hidden',mode!=='keychain');
+ $('singleEditorTitle').textContent=mode==='id'?'証明写真':'自由サイズ';
+ renderAll();
+}
+$('modeKeychain').onclick=()=>setMode('keychain');
+$('modeId').onclick=()=>setMode('id');
+$('modeFree').onclick=()=>setMode('free');
+['left','right','single'].forEach(side=>{
+ $(side+'Scale').oninput=e=>{state[side].scale=e.target.value/100;updateLabels();renderAll()};
+ $(side+'Rot').oninput=e=>{state[side].rot=+e.target.value;updateLabels();renderAll()};
+ const c=$(side+'Canvas');let dragging=false,last=null;
+ const pos=e=>{const r=c.getBoundingClientRect(),p=e.touches?e.touches[0]:e;return{x:(p.clientX-r.left)*c.width/r.width,y:(p.clientY-r.top)*c.height/r.height}};
+ const down=e=>{dragging=true;last=pos(e);e.preventDefault()};
+ const move=e=>{if(!dragging)return;const p=pos(e);state[side].x+=p.x-last.x;state[side].y+=p.y-last.y;last=p;renderAll();e.preventDefault()};
+ const up=()=>{dragging=false};
+ c.addEventListener('mousedown',down);c.addEventListener('mousemove',move);window.addEventListener('mouseup',up);
+ c.addEventListener('touchstart',down,{passive:false});c.addEventListener('touchmove',move,{passive:false});window.addEventListener('touchend',up);
+});
+$('rightPortrait').onclick=()=>{state.right.landscape=false;$('rightPortrait').classList.add('active');$('rightLandscape').classList.remove('active');renderAll()};
+$('rightLandscape').onclick=()=>{state.right.landscape=true;$('rightLandscape').classList.add('active');$('rightPortrait').classList.remove('active');renderAll()};
+$('freeWidth').oninput=e=>{state.freeW=Math.max(5,+e.target.value||30);renderAll()};
+$('freeHeight').oninput=e=>{state.freeH=Math.max(5,+e.target.value||40);renderAll()};
+$('freeShape').onchange=e=>{state.freeShape=e.target.value;renderAll()};
+$('shrink').oninput=e=>{state.shrink=+e.target.value;updateLabels();renderAll()};
+$('leftOval').oninput=e=>{state.leftOval=e.target.value/100;updateLabels();renderAll()};
+$('rightOval').oninput=e=>{state.rightOval=e.target.value/100;updateLabels();renderAll()};
+$('notchDepth').oninput=e=>{state.notchDepth=+e.target.value;updateLabels();renderAll()};
+$('notchHeight').oninput=e=>{state.notchHeight=+e.target.value;updateLabels();renderAll()};
+function setCopies(v){state.copies=Math.max(1,Math.min(30,Math.round(v||1)));updateLabels();renderAll()}
+$('copiesMinus').onclick=()=>setCopies(state.copies-1);
+$('copiesPlus').onclick=()=>setCopies(state.copies+1);
+$('copiesInput').onchange=e=>setCopies(+e.target.value);
+$('copiesInput').oninput=e=>{if(e.target.value!=='')setCopies(+e.target.value)};
+$('cutLine').onchange=renderAll;$('labels').onchange=renderAll;
+$('downloadSheet').onclick=()=>{renderSheet();const a=document.createElement('a');a.download='photo-template-studio-keychain-A4.png';a.href=$('sheetCanvas').toDataURL('image/png');a.click()};
+$('printBtn').onclick=()=>{renderSheet();window.print()};
+updateLabels();setMode('keychain');
+</script>
 </body>
 </html>
