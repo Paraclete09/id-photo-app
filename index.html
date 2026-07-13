@@ -196,11 +196,14 @@ summary{cursor:pointer;font-weight:800;min-height:40px;display:flex;align-items:
 <section class="card">
 <h2>3. 保存・共有</h2>
 <div class="row">
-<button id="saveProject">プロジェクトを保存</button>
-<label class="fileBtn secondary" for="loadProject">プロジェクトを読み込む</label>
+<button id="shareProject">調整データを共有</button>
+<button id="saveProject" class="outline">端末に保存</button>
+<label class="fileBtn secondary" for="loadProject">受け取ったデータを開く</label>
 <input id="loadProject" type="file" accept=".ptstudio,.ptorder,.json,application/json">
 </div>
-<div id="projectStatus" class="status">以前の調整データにも対応しています。</div>
+<div id="projectStatus" class="status">
+「共有」からLINE・メール・AirDropなどで送れます。受け取った端末では、このアプリを開いて「受け取ったデータを開く」を押してください。
+</div>
 </section>
 </main>
 
@@ -248,11 +251,14 @@ summary{cursor:pointer;font-weight:800;min-height:40px;display:flex;align-items:
 <div id="printArea" class="sheet"><canvas id="sheetCanvas" width="1240" height="1754"></canvas></div>
 <div class="mobileBar">
 <button id="downloadSheetMobile">PNG保存</button>
-<button id="printSheetMobile" class="secondary">印刷</button>
+<button id="printSheetMobile" class="secondary">印刷用PDF</button>
 </div>
 <div class="row" style="margin-top:8px">
 <button id="downloadSheet">A4 PNGを保存</button>
-<button id="printSheet" class="secondary">このシートを印刷</button>
+<button id="printSheet" class="secondary">印刷用PDFを開く</button>
+</div>
+<div class="small" style="margin-top:7px">
+PDFだけが開きます。PDF画面の印刷ボタンから、倍率100%・実際のサイズで印刷してください。
 </div>
 </section>
 </aside>
@@ -279,7 +285,7 @@ summary{cursor:pointer;font-weight:800;min-height:40px;display:flex;align-items:
 <div id="shopPrintArea" class="sheet"><canvas id="shopCanvas" width="1240" height="1754"></canvas></div>
 <div class="row" style="margin-top:8px">
 <button id="shopDownload">PNG保存</button>
-<button id="shopPrint" class="secondary">印刷</button>
+<button id="shopPrint" class="secondary">印刷用PDFを開く</button>
 </div>
 </section>
 </aside>
@@ -300,7 +306,23 @@ const state={
 };
 function dataURL(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(file)})}
 function imgFrom(data){return new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=data})}
-async function loadInto(edit,file){edit.imgData=await dataURL(file);edit.img=await imgFrom(edit.imgData);renderAll()}
+async function compressImageFile(file,maxSide=1800,quality=.9){
+ const original=await dataURL(file);
+ const image=await imgFrom(original);
+ const ratio=Math.min(1,maxSide/Math.max(image.width,image.height));
+ const canvas=document.createElement('canvas');
+ canvas.width=Math.max(1,Math.round(image.width*ratio));
+ canvas.height=Math.max(1,Math.round(image.height*ratio));
+ const ctx=canvas.getContext('2d');
+ ctx.drawImage(image,0,0,canvas.width,canvas.height);
+ const type=file.type==='image/png'?'image/jpeg':'image/jpeg';
+ return canvas.toDataURL(type,quality);
+}
+async function loadInto(edit,file){
+ edit.imgData=await compressImageFile(file);
+ edit.img=await imgFrom(edit.imgData);
+ renderAll();
+}
 function activeEdit(){if(state.mode!=='key')return state.single;if(state.active.type==='common')return state.common;return state.lefts[state.active.index]}
 function activeTitle(){if(state.mode==='id')return'証明写真';if(state.mode==='free')return'自由サイズ';return state.active.type==='common'?'右側・共通写真':`左側・個別写真 ${state.active.index+1}`}
 function dimsFor(type){
@@ -432,53 +454,105 @@ function savePNG(canvas,name){
  a.click();
 }
 
-function printCanvasOnly(canvas,title='Photo Template Studio'){
- const dataUrl=canvas.toDataURL('image/png');
- const win=window.open('','_blank');
- if(!win){
-  alert('印刷画面を開けませんでした。ポップアップを許可してから再度お試しください。');
-  return;
- }
- win.document.open();
- win.document.write(`<!doctype html>
- <html lang="ja">
- <head>
- <meta charset="utf-8">
- <title>${title}</title>
- <style>
-  @page{size:A4 portrait;margin:0}
-  html,body{margin:0;padding:0;width:210mm;height:297mm;background:#fff}
-  body{display:flex;align-items:flex-start;justify-content:center}
-  img{display:block;width:210mm;height:297mm;object-fit:contain}
-  @media screen{
-   body{background:#e5e7eb;padding:16px;box-sizing:border-box}
-   img{box-shadow:0 4px 20px rgba(0,0,0,.18);background:#fff}
-  }
- </style>
- </head>
- <body>
- <img src="${dataUrl}" alt="印刷シート">
- <script>
-  const img=document.querySelector('img');
-  img.onload=()=>setTimeout(()=>window.print(),250);
- <\/script>
- </body>
- </html>`);
- win.document.close();
+function dataUrlToBytes(dataUrl){
+ const base64=dataUrl.split(',')[1];
+ const binary=atob(base64);
+ const bytes=new Uint8Array(binary.length);
+ for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
+ return bytes;
 }
-
+function concatBytes(parts){
+ const total=parts.reduce((s,p)=>s+p.length,0);
+ const out=new Uint8Array(total);
+ let offset=0;
+ for(const p of parts){out.set(p,offset);offset+=p.length}
+ return out;
+}
+function canvasToA4PdfBlob(canvas){
+ const encoder=new TextEncoder();
+ const jpg=dataUrlToBytes(canvas.toDataURL('image/jpeg',.96));
+ const pageW=595.28,pageH=841.89;
+ const content=`q\n${pageW} 0 0 ${pageH} 0 0 cm\n/Im0 Do\nQ\n`;
+ const objects=[
+  `1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n`,
+  `2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n`,
+  `3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageW} ${pageH}] /Resources << /XObject << /Im0 5 0 R >> >> /Contents 4 0 R >>\nendobj\n`,
+  `4 0 obj\n<< /Length ${encoder.encode(content).length} >>\nstream\n${content}endstream\nendobj\n`
+ ];
+ const header=encoder.encode('%PDF-1.4\n%\xFF\xFF\xFF\xFF\n');
+ const parts=[header];
+ const offsets=[0];
+ let length=header.length;
+ for(const obj of objects){
+  offsets.push(length);
+  const b=encoder.encode(obj);
+  parts.push(b);length+=b.length;
+ }
+ offsets.push(length);
+ const imageHead=encoder.encode(`5 0 obj\n<< /Type /XObject /Subtype /Image /Width ${canvas.width} /Height ${canvas.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpg.length} >>\nstream\n`);
+ const imageTail=encoder.encode('\nendstream\nendobj\n');
+ parts.push(imageHead,jpg,imageTail);
+ length+=imageHead.length+jpg.length+imageTail.length;
+ const xrefOffset=length;
+ let xref='xref\n0 6\n0000000000 65535 f \n';
+ for(let i=1;i<=5;i++)xref+=String(offsets[i]).padStart(10,'0')+' 00000 n \n';
+ xref+=`trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`;
+ parts.push(encoder.encode(xref));
+ return new Blob([concatBytes(parts)],{type:'application/pdf'});
+}
+function openPdfForPrint(canvas,name){
+ const blob=canvasToA4PdfBlob(canvas);
+ const url=URL.createObjectURL(blob);
+ const win=window.open(url,'_blank');
+ if(!win){
+  const a=document.createElement('a');
+  a.href=url;a.download=name;a.click();
+ }
+ setTimeout(()=>URL.revokeObjectURL(url),60000);
+}
 $('downloadSheet').onclick=$('downloadSheetMobile').onclick=()=>{
  renderSheet();
  savePNG($('sheetCanvas'),'photo-template-A4.png');
 };
 $('printSheet').onclick=$('printSheetMobile').onclick=()=>{
  renderSheet();
- printCanvasOnly($('sheetCanvas'),'Photo Template Studio 印刷');
+ openPdfForPrint($('sheetCanvas'),'photo-template-A4.pdf');
 };
 function serial(e){const o={...e};delete o.img;return o}
 function project(){return{app:'Photo Template Studio Pro',version:4,mode:state.mode,leftW:state.leftW,leftH:state.leftH,rightW:state.rightW,rightH:state.rightH,sameSize:state.sameSize,freeW:state.freeW,freeH:state.freeH,freeShape:state.freeShape,pairCopies:state.pairCopies,singleQty:state.singleQty,common:serial(state.common),lefts:state.lefts.map(serial),single:serial(state.single)}}
 function downloadJSON(o,name){const b=new Blob([JSON.stringify(o)],{type:'application/json'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)}
-$('saveProject').onclick=()=>{downloadJSON(project(),'photo-template-project.ptstudio');$('projectStatus').textContent='保存しました。'};
+function makeProjectFile(){
+ return new File(
+  [JSON.stringify(project())],
+  'photo-template-project.ptstudio',
+  {type:'application/json'}
+ );
+}
+$('shareProject').onclick=async()=>{
+ const file=makeProjectFile();
+ try{
+  if(navigator.share && (!navigator.canShare || navigator.canShare({files:[file]}))){
+   await navigator.share({
+    title:'Photo Template Studio 調整データ',
+    text:'このファイルをPhoto Template Studioで読み込んでください。',
+    files:[file]
+   });
+   $('projectStatus').textContent='共有画面を開きました。';
+  }else{
+   downloadJSON(project(),'photo-template-project.ptstudio');
+   $('projectStatus').textContent='この端末では直接共有できないため、調整データを保存しました。LINEやメールへ添付してください。';
+  }
+ }catch(e){
+  if(e && e.name!=='AbortError'){
+   downloadJSON(project(),'photo-template-project.ptstudio');
+   $('projectStatus').textContent='直接共有できなかったため、調整データを保存しました。';
+  }
+ }
+};
+$('saveProject').onclick=()=>{
+ downloadJSON(project(),'photo-template-project.ptstudio');
+ $('projectStatus').textContent='端末に保存しました。';
+};
 function migrate(p){
  const src=p.state||p;
  if(src.lefts||src.common)return src;
@@ -498,7 +572,7 @@ async function addOrders(files){for(const f of files){try{const p=migrate(JSON.p
 $('shopFiles').onchange=e=>addOrders([...e.target.files]);$('clearOrders').onclick=()=>{state.orders=[];renderShop()};
 function renderShop(){const list=$('orderList');list.innerHTML='';state.orders.forEach((o,i)=>{const d=document.createElement('div');d.className='infoBox';d.innerHTML=`<strong>注文 ${i+1}</strong><br>${o._name||''}`;const b=document.createElement('button');b.className='outline';b.textContent='削除';b.onclick=()=>{state.orders.splice(i,1);renderShop()};d.appendChild(b);list.appendChild(d)});$('shopStatus').textContent=`${state.orders.length}件読み込み済み`;renderShopSheet()}
 function renderShopSheet(){const c=$('shopCanvas'),ctx=c.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);const margin=14*MM,gap=7*MM,rowGap=10*MM;let x=margin,y=margin;for(const o of state.orders){if((o.mode==='key'||o.mode==='keychain')&&o.lefts){const lw=(o.leftW||24),lh=(o.leftH||33),rw=(o.rightW||24.5),rh=(o.rightH||33.5);for(const l of o.lefts){for(let q=0;q<(o.pairCopies||l.qty||1);q++){const rd=o.common?.landscape?{w:rh,h:rw}:{w:rw,h:rh},setW=(lw+rd.w+7)*MM,setH=Math.max(lh,rd.h)*MM;if(x+setW>c.width-margin){x=margin;y+=setH+rowGap}if(y+setH>c.height-margin)return;const a=drawPiece(ctx,l,x,y,lw,lh,'oval');drawPiece(ctx,o.common,x+a.w+gap,y,rd.w,rd.h,'oval');x+=setW}}}else{const d=o.mode==='id'?{w:30,h:40,shape:'rect'}:{w:o.freeW||30,h:o.freeH||40,shape:o.freeShape||'rect'},qty=o.singleQty||4;for(let i=0;i<qty;i++){if(x+d.w*MM>c.width-margin){x=margin;y+=d.h*MM+rowGap}if(y+d.h*MM>c.height-margin)return;drawPiece(ctx,o.single,x,y,d.w,d.h,d.shape);x+=(d.w+7)*MM}}}}
-$('shopDownload').onclick=()=>{renderShopSheet();savePNG($('shopCanvas'),'shop-orders-A4.png')};$('shopPrint').onclick=()=>{renderShopSheet();printCanvasOnly($('shopCanvas'),'Photo Template Studio ショップ印刷')};
+$('shopDownload').onclick=()=>{renderShopSheet();savePNG($('shopCanvas'),'shop-orders-A4.png')};$('shopPrint').onclick=()=>{renderShopSheet();openPdfForPrint($('shopCanvas'),'shop-orders-A4.pdf')};
 refreshTemplates();renderAll();renderShop();
 </script>
 </body>
