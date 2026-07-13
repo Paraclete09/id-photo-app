@@ -161,7 +161,7 @@ summary{cursor:pointer;font-weight:800;min-height:40px;display:flex;align-items:
 
 <div class="panel">
 <h3>左側・個別写真</h3>
-<div class="small">1枚から最大4枚。写真ごとに必要セット数を指定できます。</div>
+<div class="small">1枚から最大4枚。すべて同じセット数で印刷します。</div>
 <button id="addLeft" style="margin-top:8px">個別写真を追加</button>
 </div>
 </div>
@@ -169,13 +169,13 @@ summary{cursor:pointer;font-weight:800;min-height:40px;display:flex;align-items:
 <div id="leftList" class="photoList" style="margin-top:10px"></div>
 
 <div class="control">
-<div class="labelrow"><span>全体の予備セット</span><span id="spareVal">0</span></div>
+<div class="labelrow"><span>各組み合わせの印刷数</span><span id="pairCopiesVal">1セットずつ</span></div>
 <div class="row">
-<button id="spareMinus" class="outline">−</button>
-<input id="spareInput" type="number" min="0" max="20" value="0" style="width:90px;text-align:center">
-<button id="sparePlus" class="outline">＋</button>
+<button id="pairCopiesMinus" class="outline">−</button>
+<input id="pairCopiesInput" type="number" min="1" max="20" value="1" style="width:100px;text-align:center">
+<button id="pairCopiesPlus" class="outline">＋</button>
 </div>
-<div class="small">各左側写真の必要数とは別に、最後へ共通の予備セットを追加します。</div>
+<div class="small">左側写真が3枚なら、各組み合わせを2セットずつにすると合計6セット印刷します。</div>
 </div>
 </section>
 
@@ -230,10 +230,14 @@ summary{cursor:pointer;font-weight:800;min-height:40px;display:flex;align-items:
 </details>
 
 <details>
-<summary>明るさ・色</summary>
-<div class="control"><div class="labelrow"><span>明るさ</span><span id="brightnessVal">0</span></div><input id="brightness" type="range" min="-100" max="100" value="0"></div>
-<div class="control"><div class="labelrow"><span>コントラスト</span><span id="contrastVal">0</span></div><input id="contrast" type="range" min="-100" max="100" value="0"></div>
-<div class="control"><div class="labelrow"><span>彩度</span><span id="saturationVal">0</span></div><input id="saturation" type="range" min="-100" max="100" value="0"></div>
+<summary>写真の見え方</summary>
+<div class="small" style="margin-bottom:8px">細かな調整はせず、用途に合わせたプリセットから選べます。</div>
+<div class="tabs" id="presetTabs">
+<button id="presetNormal" class="active">補正なし</button>
+<button id="presetBright" class="outline">明るめ</button>
+<button id="presetVivid" class="outline">鮮やか</button>
+<button id="presetSoft" class="outline">やわらか</button>
+</div>
 </details>
 
 <h2 style="margin-top:14px">4. 印刷</h2>
@@ -286,13 +290,13 @@ summary{cursor:pointer;font-weight:800;min-height:40px;display:flex;align-items:
 <script>
 const $=id=>document.getElementById(id);
 const MM=1240/210;
-const emptyEdit=()=>({img:null,imgData:null,x:0,y:0,scale:1,rot:0,flipH:false,brightness:0,contrast:0,saturation:0,qty:1});
+const emptyEdit=()=>({img:null,imgData:null,x:0,y:0,scale:1,rot:0,flipH:false,brightness:0,contrast:0,saturation:0,preset:'normal',qty:1});
 const state={
  view:'create',mode:'key',active:{type:'common',index:-1},
  common:{...emptyEdit(),landscape:false},
  lefts:[emptyEdit()],single:emptyEdit(),
  leftW:24,leftH:33,rightW:24.5,rightH:33.5,sameSize:false,
- freeW:30,freeH:40,freeShape:'rect',spare:0,singleQty:4,orders:[]
+ freeW:30,freeH:40,freeShape:'rect',pairCopies:1,singleQty:4,orders:[]
 };
 function dataURL(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(file)})}
 function imgFrom(data){return new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=data})}
@@ -338,20 +342,18 @@ function drawEditor(){
  ctx.save();path(ctx,x,y,w,h,d.shape);ctx.clip();
  if(e.img)drawImage(ctx,e,x,y,w,h,1);else{ctx.fillStyle='#eef2f7';ctx.fillRect(x,y,w,h);ctx.fillStyle='#64748b';ctx.font='22px sans-serif';ctx.textAlign='center';ctx.fillText('写真を選択してください',x+w/2,y+h/2)}
  ctx.restore();ctx.save();ctx.strokeStyle='#315efb';ctx.lineWidth=4;ctx.setLineDash([10,7]);path(ctx,x,y,w,h,d.shape);ctx.stroke();ctx.restore();
- $('editorTitle').textContent=activeTitle();['scale','rot','brightness','contrast','saturation'].forEach(id=>$(id).value=e[id]);
- $('scale').value=e.scale*100;$('scaleVal').textContent=Math.round(e.scale*100)+'%';$('rotVal').textContent=Math.round(e.rot)+'°';$('brightnessVal').textContent=e.brightness;$('contrastVal').textContent=e.contrast;$('saturationVal').textContent=e.saturation
+ $('editorTitle').textContent=activeTitle();$('scale').value=e.scale*100;$('rot').value=e.rot;
+ $('scaleVal').textContent=Math.round(e.scale*100)+'%';$('rotVal').textContent=Math.round(e.rot)+'°';updatePresetButtons(e)
 }
 function renderLefts(){
  const box=$('leftList');box.innerHTML='';
  state.lefts.forEach((e,i)=>{
   const act=state.active.type==='left'&&state.active.index===i,row=document.createElement('div');row.className='photoRow'+(act?' active':'');
-  row.innerHTML=`<div><strong>左側写真 ${i+1}${act?'（編集中）':''}</strong><div class="small">${e.imgData?'選択済み':'未選択'} / ${e.qty}セット</div></div>`;
+  row.innerHTML=`<div><strong>左側写真 ${i+1}${act?'（編集中）':''}</strong><div class="small">${e.imgData?'選択済み':'未選択'}</div></div>`;
   const ctr=document.createElement('div');ctr.className='row';
   const lab=document.createElement('label');lab.className='fileBtn';lab.textContent='写真を選択';const inp=document.createElement('input');inp.type='file';inp.accept='image/*';inp.onchange=async ev=>{if(ev.target.files[0]){state.active={type:'left',index:i};await loadInto(e,ev.target.files[0])}};lab.appendChild(inp);
   const edit=document.createElement('button');edit.className=act?'active':'outline';edit.textContent=act?'編集中':'調整する';edit.onclick=()=>{state.active={type:'left',index:i};renderAll()};
-  const minus=document.createElement('button');minus.className='outline';minus.textContent='−';minus.onclick=()=>{e.qty=Math.max(1,e.qty-1);renderAll()};
-  const plus=document.createElement('button');plus.className='outline';plus.textContent='＋';plus.onclick=()=>{e.qty=Math.min(30,e.qty+1);renderAll()};
-  ctr.append(lab,edit,minus,plus);
+  ctr.append(lab,edit);
   if(state.lefts.length>1){const del=document.createElement('button');del.className='danger';del.textContent='削除';del.onclick=()=>{state.lefts.splice(i,1);state.active={type:'common',index:-1};renderAll()};ctr.appendChild(del)}
   row.appendChild(ctr);box.appendChild(row)
  })
@@ -362,7 +364,30 @@ function setMode(mode){
  $('keySetup').classList.toggle('hidden',mode!=='key');$('singleSetup').classList.toggle('hidden',mode==='key');$('quickSwitch').classList.toggle('hidden',mode!=='key');
  state.active=mode==='key'?{type:'common',index:-1}:{type:'single',index:-1};renderAll()
 }
-function renderAll(){renderLefts();$('commonPanel').classList.toggle('active',state.active.type==='common');$('quickCommon').classList.toggle('active',state.active.type==='common');$('quickLeft').classList.toggle('active',state.active.type==='left');$('spareVal').textContent=state.spare;$('spareInput').value=state.spare;$('singleQtyVal').textContent=state.singleQty;$('singleQty').value=state.singleQty;drawEditor();renderSheet()}
+function applyPreset(name){
+ const a=activeEdit();
+ a.preset=name;
+ if(name==='bright'){a.brightness=14;a.contrast=4;a.saturation=2}
+ else if(name==='vivid'){a.brightness=5;a.contrast=12;a.saturation=18}
+ else if(name==='soft'){a.brightness=8;a.contrast=-8;a.saturation=-5}
+ else {a.brightness=0;a.contrast=0;a.saturation=0}
+ adjustCache.delete(a);renderAll();
+}
+function updatePresetButtons(a){
+ const preset=a.preset||'normal';
+ ['Normal','Bright','Vivid','Soft'].forEach(n=>{
+  const id='preset'+n;
+  if($(id)){
+   $(id).classList.toggle('active',preset===n.toLowerCase());
+   $(id).classList.toggle('outline',preset!==n.toLowerCase());
+  }
+ });
+}
+$('presetNormal').onclick=()=>applyPreset('normal');
+$('presetBright').onclick=()=>applyPreset('bright');
+$('presetVivid').onclick=()=>applyPreset('vivid');
+$('presetSoft').onclick=()=>applyPreset('soft');
+function renderAll(){renderLefts();$('commonPanel').classList.toggle('active',state.active.type==='common');$('quickCommon').classList.toggle('active',state.active.type==='common');$('quickLeft').classList.toggle('active',state.active.type==='left');$('pairCopiesVal').textContent=state.pairCopies+'セットずつ';$('pairCopiesInput').value=state.pairCopies;$('singleQtyVal').textContent=state.singleQty;$('singleQty').value=state.singleQty;drawEditor();renderSheet()}
 $('modeKey').onclick=()=>setMode('key');$('modeId').onclick=()=>setMode('id');$('modeFree').onclick=()=>setMode('free');
 $('commonFile').onchange=async e=>{if(e.target.files[0]){state.active={type:'common',index:-1};await loadInto(state.common,e.target.files[0])}};
 $('singleFile').onchange=async e=>{if(e.target.files[0]){state.active={type:'single',index:-1};await loadInto(state.single,e.target.files[0])}};
@@ -378,28 +403,34 @@ function syncDims(){
 }
 ['leftW','leftH','rightW','rightH','sameSize'].forEach(id=>$(id).oninput=syncDims);
 $('freeW').oninput=e=>{state.freeW=Math.max(5,+e.target.value||30);renderAll()};$('freeH').oninput=e=>{state.freeH=Math.max(5,+e.target.value||40);renderAll()};$('freeShape').onchange=e=>{state.freeShape=e.target.value;renderAll()};
-['scale','rot','brightness','contrast','saturation'].forEach(id=>$(id).oninput=e=>{const a=activeEdit();a[id]=id==='scale'?+e.target.value/100:+e.target.value;adjustCache.delete(a);renderAll()});
-$('rotate90').onclick=()=>{const a=activeEdit();a.rot=(a.rot+90)%360;renderAll()};$('flipH').onclick=()=>{const a=activeEdit();a.flipH=!a.flipH;renderAll()};$('resetEdit').onclick=()=>{const a=activeEdit();Object.assign(a,{x:0,y:0,scale:1,rot:0,flipH:false,brightness:0,contrast:0,saturation:0});adjustCache.delete(a);renderAll()};
-function setSpare(v){state.spare=Math.max(0,Math.min(20,Math.round(v||0)));renderAll()}$('spareMinus').onclick=()=>setSpare(state.spare-1);$('sparePlus').onclick=()=>setSpare(state.spare+1);$('spareInput').oninput=e=>setSpare(+e.target.value);
+['scale','rot'].forEach(id=>$(id).oninput=e=>{const a=activeEdit();a[id]=id==='scale'?+e.target.value/100:+e.target.value;adjustCache.delete(a);renderAll()});
+$('rotate90').onclick=()=>{const a=activeEdit();a.rot=(a.rot+90)%360;renderAll()};$('flipH').onclick=()=>{const a=activeEdit();a.flipH=!a.flipH;renderAll()};$('resetEdit').onclick=()=>{const a=activeEdit();Object.assign(a,{x:0,y:0,scale:1,rot:0,flipH:false,brightness:0,contrast:0,saturation:0,preset:'normal'});adjustCache.delete(a);renderAll()};
+function setPairCopies(v){
+ state.pairCopies=Math.max(1,Math.min(20,Math.round(v||1)));
+ renderAll();
+}
+$('pairCopiesMinus').onclick=()=>setPairCopies(state.pairCopies-1);
+$('pairCopiesPlus').onclick=()=>setPairCopies(state.pairCopies+1);
+$('pairCopiesInput').oninput=e=>{if(e.target.value!=='')setPairCopies(+e.target.value)};
 function setSingleQty(v){state.singleQty=Math.max(1,Math.min(50,Math.round(v||1)));renderAll()}$('singleMinus').onclick=()=>setSingleQty(state.singleQty-1);$('singlePlus').onclick=()=>setSingleQty(state.singleQty+1);$('singleQty').oninput=e=>setSingleQty(+e.target.value);
 const ec=$('editorCanvas');let dragging=false,last=null;function pos(ev){const r=ec.getBoundingClientRect(),p=ev.touches?ev.touches[0]:ev;return{x:(p.clientX-r.left)*ec.width/r.width,y:(p.clientY-r.top)*ec.height/r.height}}function down(ev){dragging=true;last=pos(ev);ev.preventDefault()}function move(ev){if(!dragging)return;const p=pos(ev),a=activeEdit();a.x+=p.x-last.x;a.y+=p.y-last.y;last=p;renderAll();ev.preventDefault()}function up(){dragging=false}ec.addEventListener('mousedown',down);ec.addEventListener('mousemove',move);window.addEventListener('mouseup',up);ec.addEventListener('touchstart',down,{passive:false});ec.addEventListener('touchmove',move,{passive:false});window.addEventListener('touchend',up);
 function drawPiece(ctx,e,x,y,mmW,mmH,shape){const w=mmW*MM,h=mmH*MM;ctx.save();path(ctx,x,y,w,h,shape);ctx.clip();ctx.fillStyle='#fff';ctx.fillRect(x,y,w,h);if(e.img)drawImage(ctx,e,x,y,w,h,.35);ctx.restore();if($('cutLine').checked){ctx.save();ctx.strokeStyle='#7b8798';ctx.lineWidth=1.1;ctx.setLineDash([5,4]);path(ctx,x,y,w,h,shape);ctx.stroke();ctx.restore()}return{w,h}}
 function renderSheet(){
  const c=$('sheetCanvas'),ctx=c.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);const margin=14*MM,gap=7*MM,rowGap=10*MM;let x=margin,y=margin;
  if(state.mode==='key'){
-  const jobs=[];state.lefts.forEach((e,i)=>{for(let q=0;q<e.qty;q++)jobs.push({e,label:`${i+1}`})});for(let s=0;s<state.spare;s++)jobs.push({e:state.lefts[0],label:'予備'});
+  const jobs=[];state.lefts.forEach((e,i)=>{for(let q=0;q<state.pairCopies;q++)jobs.push({e,label:`${i+1}`})});
   for(const job of jobs){const rd=dimsFor('common'),lw=state.leftW*MM,lh=state.leftH*MM,rw=rd.w*MM,rh=rd.h*MM,setW=lw+gap+rw,setH=Math.max(lh,rh);if(x+setW>c.width-margin){x=margin;y+=setH+rowGap}if(y+setH>c.height-margin)return;const a=drawPiece(ctx,job.e,x,y,state.leftW,state.leftH,'oval');const b=drawPiece(ctx,state.common,x+a.w+gap,y,rd.w,rd.h,'oval');if($('labels').checked){ctx.fillStyle='#526071';ctx.font='17px sans-serif';ctx.textAlign='center';ctx.fillText(job.label,x+(a.w+gap+b.w)/2,y+setH+20)}x+=setW+gap}
  }else{const d=dimsFor('single'),iw=d.w*MM,ih=d.h*MM;for(let i=0;i<state.singleQty;i++){if(x+iw>c.width-margin){x=margin;y+=ih+rowGap}if(y+ih>c.height-margin)return;drawPiece(ctx,state.single,x,y,d.w,d.h,d.shape);x+=iw+gap}}
 }
 $('cutLine').onchange=renderSheet;$('labels').onchange=renderSheet;function savePNG(canvas,name){const a=document.createElement('a');a.download=name;a.href=canvas.toDataURL('image/png');a.click()}$('downloadSheet').onclick=$('downloadSheetMobile').onclick=()=>{renderSheet();savePNG($('sheetCanvas'),'photo-template-A4.png')};$('printSheet').onclick=$('printSheetMobile').onclick=()=>{renderSheet();window.print()};
 function serial(e){const o={...e};delete o.img;return o}
-function project(){return{app:'Photo Template Studio Pro',version:4,mode:state.mode,leftW:state.leftW,leftH:state.leftH,rightW:state.rightW,rightH:state.rightH,sameSize:state.sameSize,freeW:state.freeW,freeH:state.freeH,freeShape:state.freeShape,spare:state.spare,singleQty:state.singleQty,common:serial(state.common),lefts:state.lefts.map(serial),single:serial(state.single)}}
+function project(){return{app:'Photo Template Studio Pro',version:4,mode:state.mode,leftW:state.leftW,leftH:state.leftH,rightW:state.rightW,rightH:state.rightH,sameSize:state.sameSize,freeW:state.freeW,freeH:state.freeH,freeShape:state.freeShape,pairCopies:state.pairCopies,singleQty:state.singleQty,common:serial(state.common),lefts:state.lefts.map(serial),single:serial(state.single)}}
 function downloadJSON(o,name){const b=new Blob([JSON.stringify(o)],{type:'application/json'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)}
 $('saveProject').onclick=()=>{downloadJSON(project(),'photo-template-project.ptstudio');$('projectStatus').textContent='保存しました。'};
 function migrate(p){
  const src=p.state||p;
  if(src.lefts||src.common)return src;
- if(src.left||src.right)return{mode:src.mode||'key',lefts:[src.left||emptyEdit()],common:src.right||emptyEdit(),single:src.single||emptyEdit(),leftW:24,leftH:33,rightW:24.5,rightH:33.5,spare:0,singleQty:4};
+ if(src.left||src.right)return{mode:src.mode||'key',lefts:[src.left||emptyEdit()],common:src.right||emptyEdit(),single:src.single||emptyEdit(),leftW:24,leftH:33,rightW:24.5,rightH:33.5,pairCopies:1,singleQty:4};
  return src
 }
 async function loadProjectFile(file){
@@ -414,7 +445,7 @@ $('createTab').onclick=()=>{$('createView').classList.remove('hidden');$('shopVi
 async function addOrders(files){for(const f of files){try{const p=migrate(JSON.parse(await f.text()));for(const e of [p.common,p.single,...(p.lefts||[])])if(e?.imgData)e.img=await imgFrom(e.imgData);p._name=f.name;state.orders.push(p)}catch{}}renderShop()}
 $('shopFiles').onchange=e=>addOrders([...e.target.files]);$('clearOrders').onclick=()=>{state.orders=[];renderShop()};
 function renderShop(){const list=$('orderList');list.innerHTML='';state.orders.forEach((o,i)=>{const d=document.createElement('div');d.className='infoBox';d.innerHTML=`<strong>注文 ${i+1}</strong><br>${o._name||''}`;const b=document.createElement('button');b.className='outline';b.textContent='削除';b.onclick=()=>{state.orders.splice(i,1);renderShop()};d.appendChild(b);list.appendChild(d)});$('shopStatus').textContent=`${state.orders.length}件読み込み済み`;renderShopSheet()}
-function renderShopSheet(){const c=$('shopCanvas'),ctx=c.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);const margin=14*MM,gap=7*MM,rowGap=10*MM;let x=margin,y=margin;for(const o of state.orders){if((o.mode==='key'||o.mode==='keychain')&&o.lefts){const lw=(o.leftW||24),lh=(o.leftH||33),rw=(o.rightW||24.5),rh=(o.rightH||33.5);for(const l of o.lefts){for(let q=0;q<(l.qty||1);q++){const rd=o.common?.landscape?{w:rh,h:rw}:{w:rw,h:rh},setW=(lw+rd.w+7)*MM,setH=Math.max(lh,rd.h)*MM;if(x+setW>c.width-margin){x=margin;y+=setH+rowGap}if(y+setH>c.height-margin)return;const a=drawPiece(ctx,l,x,y,lw,lh,'oval');drawPiece(ctx,o.common,x+a.w+gap,y,rd.w,rd.h,'oval');x+=setW}}}else{const d=o.mode==='id'?{w:30,h:40,shape:'rect'}:{w:o.freeW||30,h:o.freeH||40,shape:o.freeShape||'rect'},qty=o.singleQty||4;for(let i=0;i<qty;i++){if(x+d.w*MM>c.width-margin){x=margin;y+=d.h*MM+rowGap}if(y+d.h*MM>c.height-margin)return;drawPiece(ctx,o.single,x,y,d.w,d.h,d.shape);x+=(d.w+7)*MM}}}}
+function renderShopSheet(){const c=$('shopCanvas'),ctx=c.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);const margin=14*MM,gap=7*MM,rowGap=10*MM;let x=margin,y=margin;for(const o of state.orders){if((o.mode==='key'||o.mode==='keychain')&&o.lefts){const lw=(o.leftW||24),lh=(o.leftH||33),rw=(o.rightW||24.5),rh=(o.rightH||33.5);for(const l of o.lefts){for(let q=0;q<(o.pairCopies||l.qty||1);q++){const rd=o.common?.landscape?{w:rh,h:rw}:{w:rw,h:rh},setW=(lw+rd.w+7)*MM,setH=Math.max(lh,rd.h)*MM;if(x+setW>c.width-margin){x=margin;y+=setH+rowGap}if(y+setH>c.height-margin)return;const a=drawPiece(ctx,l,x,y,lw,lh,'oval');drawPiece(ctx,o.common,x+a.w+gap,y,rd.w,rd.h,'oval');x+=setW}}}else{const d=o.mode==='id'?{w:30,h:40,shape:'rect'}:{w:o.freeW||30,h:o.freeH||40,shape:o.freeShape||'rect'},qty=o.singleQty||4;for(let i=0;i<qty;i++){if(x+d.w*MM>c.width-margin){x=margin;y+=d.h*MM+rowGap}if(y+d.h*MM>c.height-margin)return;drawPiece(ctx,o.single,x,y,d.w,d.h,d.shape);x+=(d.w+7)*MM}}}}
 $('shopDownload').onclick=()=>{renderShopSheet();savePNG($('shopCanvas'),'shop-orders-A4.png')};$('shopPrint').onclick=()=>{renderShopSheet();window.print()};
 refreshTemplates();renderAll();renderShop();
 </script>
