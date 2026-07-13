@@ -48,9 +48,37 @@ canvas.editor{display:block;width:100%;height:auto;background:#dfe6ef;border-rad
 #sheetCanvas{display:block;max-width:100%;height:auto;margin:auto;background:#fff;box-shadow:0 6px 20px rgba(16,24,40,.08)}
 .hidden{display:none!important}
 .status{margin-top:8px;font-size:13px;color:var(--muted)}
+details{border:1px solid var(--line);border-radius:15px;padding:10px 12px;margin-top:10px;background:#fff}
+summary{cursor:pointer;font-weight:800;min-height:42px;display:flex;align-items:center}
+input[type=range]{accent-color:var(--pri)}
+
 .notice{padding:12px 14px;border:1px solid #f2d28d;background:#fff8e7;border-radius:14px;color:#7a4c00;font-size:13px;line-height:1.75}
-@media(max-width:900px){.grid{grid-template-columns:1fr}.editorCard{position:static}}
-@media(max-width:560px){.slotGrid,.infoGrid,.toolbar{grid-template-columns:1fr}.wrap{padding:9px}.card,header{border-radius:16px}}
+@media(max-width:900px){
+.grid{grid-template-columns:1fr}
+.editorCard{position:static}
+.mobileStickyPreview{position:sticky;top:0;z-index:20;background:var(--bg);padding-top:6px}
+.mobileActionBar{position:sticky;bottom:0;z-index:25;background:rgba(244,247,251,.96);backdrop-filter:blur(8px);padding:10px 0 4px}
+.mobileActionBar .row{display:grid;grid-template-columns:1fr 1fr}
+.mobileActionBar button{width:100%}
+}
+@media(max-width:560px){
+.slotGrid,.infoGrid,.toolbar{grid-template-columns:1fr}
+.wrap{padding:8px}
+.card,header{border-radius:16px}
+.card{padding:12px}
+header{padding:16px}
+h1{font-size:24px}
+button,.fileBtn{min-height:48px;padding:12px 14px;font-size:15px}
+input[type=range]{height:32px}
+.control{padding:11px}
+.photoRow{grid-template-columns:1fr}
+.photoRow .row{display:grid;grid-template-columns:1fr 1fr}
+.previewBox{padding:8px}
+canvas.editor{max-height:58vh;object-fit:contain}
+.tabs{display:grid;grid-template-columns:1fr}
+.tabs button{width:100%}
+.row{gap:8px}
+}
 @media print{
 body{background:#fff}
 body *{visibility:hidden}
@@ -138,8 +166,12 @@ body *{visibility:hidden}
 </main>
 
 <aside>
-<section class="card editorCard">
+<section class="card editorCard mobileStickyPreview">
 <h2>写真を調整</h2>
+<div id="mobileTargetSwitcher" class="tabs">
+<button id="quickCommon" class="active">右側・共通</button>
+<button id="quickLeft" class="outline">左側・個別</button>
+</div>
 <div class="previewBox">
 <div id="editingLabel" style="display:inline-block;background:#315efb;color:#fff;padding:5px 10px;border-radius:999px;font-size:12px;font-weight:800;margin-bottom:8px">編集中</div>
 <div id="editorTitle" style="font-weight:800;margin-bottom:8px">右側・共通写真</div>
@@ -147,6 +179,8 @@ body *{visibility:hidden}
 <div class="small">写真をドラッグして位置を調整</div>
 </div>
 
+<details open>
+<summary>位置・サイズ</summary>
 <div class="control">
 <div class="labelrow"><span>拡大</span><span id="scaleVal">100%</span></div>
 <input id="scale" type="range" min="50" max="300" value="100">
@@ -160,7 +194,10 @@ body *{visibility:hidden}
 <button id="flipH" class="outline">左右反転</button>
 <button id="resetEdit" class="outline">リセット</button>
 </div>
+</details>
 
+<details>
+<summary>明るさ・色</summary>
 <div class="control">
 <div class="labelrow"><span>明るさ</span><span id="brightnessVal">0</span></div>
 <input id="brightness" type="range" min="-100" max="100" value="0">
@@ -173,6 +210,7 @@ body *{visibility:hidden}
 <div class="labelrow"><span>彩度</span><span id="saturationVal">0</span></div>
 <input id="saturation" type="range" min="-100" max="100" value="0">
 </div>
+</details>
 
 <div style="height:12px"></div>
 <h2>4. 印刷</h2>
@@ -183,9 +221,11 @@ body *{visibility:hidden}
 <div id="printArea" class="sheet">
 <canvas id="sheetCanvas" width="1240" height="1754"></canvas>
 </div>
+<div class="mobileActionBar">
 <div class="row" style="margin-top:10px">
 <button id="downloadSheet">A4 PNGを保存</button>
 <button id="printSheet" class="secondary">このシートを印刷</button>
+</div>
 </div>
 <p class="small">印刷設定は「実際のサイズ」「100%」を選び、「用紙に合わせる」はオフにしてください。</p>
 </section>
@@ -314,8 +354,17 @@ function setMode(mode){
  state.active=mode==='key'?{type:'common',index:-1}:{type:'single',index:-1};
  renderAll();
 }
+function updateQuickSwitcher(){
+ const isCommon=state.active.type==='common';
+ $('quickCommon').classList.toggle('active',isCommon);
+ $('quickCommon').classList.toggle('outline',!isCommon);
+ $('quickLeft').classList.toggle('active',!isCommon&&state.mode==='key');
+ $('quickLeft').classList.toggle('outline',isCommon||state.mode!=='key');
+ $('mobileTargetSwitcher').classList.toggle('hidden',state.mode!=='key');
+}
 function renderAll(){
  renderLeftList();
+ updateQuickSwitcher();
  $('commonCard').classList.toggle('active',state.active.type==='common');
  $('editCommon').classList.toggle('active',state.active.type==='common');
  drawEditor();renderSheet();
@@ -326,6 +375,8 @@ $('tabFree').onclick=()=>setMode('free');
 $('commonFile').onchange=async e=>{if(e.target.files[0]){state.active={type:'common',index:-1};await loadInto(state.common,e.target.files[0])}};
 $('singleFile').onchange=async e=>{if(e.target.files[0]){state.active={type:'single',index:-1};await loadInto(state.single,e.target.files[0])}};
 $('editCommon').onclick=()=>{state.active={type:'common',index:-1};renderAll()};
+$('quickCommon').onclick=()=>{state.active={type:'common',index:-1};renderAll()};
+$('quickLeft').onclick=()=>{state.active={type:'left',index:0};renderAll()};
 $('addLeft').onclick=()=>{if(state.lefts.length<4){state.lefts.push(emptyEdit());state.active={type:'left',index:state.lefts.length-1};renderAll()}};
 $('commonPortrait').onclick=()=>{state.common.landscape=false;$('commonPortrait').classList.add('active');$('commonLandscape').classList.remove('active');renderAll()};
 $('commonLandscape').onclick=()=>{state.common.landscape=true;$('commonLandscape').classList.add('active');$('commonPortrait').classList.remove('active');renderAll()};
