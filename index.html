@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Photo Template Studio v3.5 Stable</title>
+<title>Photo Template Studio v3.6 Stable</title>
 <style>
 :root{--bg:#f4f7fb;--card:#fff;--ink:#172033;--muted:#667085;--line:#d9e1ec;--pri:#315efb;--pri2:#244bd8;--sec:#0f766e;--danger:#b42318}
 *{box-sizing:border-box}
@@ -120,7 +120,7 @@ summary{cursor:pointer;font-weight:800;min-height:40px;display:flex;align-items:
 <body>
 <div class="wrap">
 <header>
-<h1>Photo Template Studio v3.5 Stable</h1>
+<h1>Photo Template Studio v3.6 Stable</h1>
 <div class="small">キーチェーン、写真用紙、アルバム作成、AIトリミングに対応した安定版です。</div>
 </header>
 
@@ -363,7 +363,51 @@ function filterFor(e){
 }
 function drawImage(ctx,e,x,y,w,h){if(!e.img)return;const base=Math.max(w/e.img.width,h/e.img.height)*e.scale;ctx.filter=filterFor(e);ctx.translate(x+w/2+e.xNorm*w,y+h/2+e.yNorm*h);ctx.rotate(e.rot*Math.PI/180);ctx.scale(e.flipH?-1:1,1);ctx.drawImage(e.img,-e.img.width*base/2,-e.img.height*base/2,e.img.width*base,e.img.height*base);ctx.filter='none'}
 function drawPreview(canvas,side,e,shape='oval'){const ctx=canvas.getContext('2d'),d=dims(side);ctx.clearRect(0,0,canvas.width,canvas.height);ctx.fillStyle='#dfe6ef';ctx.fillRect(0,0,canvas.width,canvas.height);const pad=34,sc=Math.min((canvas.width-pad*2)/d.w,(canvas.height-pad*2)/d.h),w=d.w*sc,h=d.h*sc,x=(canvas.width-w)/2,y=(canvas.height-h)/2;ctx.save();shape==='oval'?ellipse(ctx,x,y,w,h):rect(ctx,x,y,w,h);ctx.clip();if(e.img)drawImage(ctx,e,x,y,w,h);ctx.restore();ctx.strokeStyle='#315efb';ctx.lineWidth=3;shape==='oval'?ellipse(ctx,x,y,w,h):rect(ctx,x,y,w,h);ctx.stroke()}
-function renderLefts(){const box=$('leftList');box.innerHTML='';state.lefts.forEach((e,i)=>{const r=document.createElement('div');r.className='photoRow'+(state.active.type==='left'&&state.active.index===i?' active':'');r.innerHTML=`<div><strong>左側写真 ${i+1}</strong><div class="small">${e.img?'選択済み':'未選択'}</div></div>`;const c=document.createElement('div');c.className='row';const l=document.createElement('label');l.className='fileBtn';l.textContent='写真を選択';const inp=document.createElement('input');inp.type='file';inp.accept='image/*';inp.onchange=ev=>ev.target.files[0]&&setFile(e,ev.target.files[0]);l.appendChild(inp);const b=document.createElement('button');b.className='outline';b.textContent='調整';b.onclick=()=>{state.active={type:'left',index:i};renderAll()};c.append(l,b);r.append(c);box.append(r)})}
+function renderLefts(){
+ const box=$('leftList');
+ box.innerHTML='';
+
+ state.lefts.forEach((e,i)=>{
+  const isActive=state.active.type==='left'&&state.active.index===i;
+  const r=document.createElement('div');
+  r.className='photoRow'+(isActive?' active':'');
+
+  r.innerHTML=`<div>
+   <strong>左側写真 ${i+1}${isActive?'（編集中）':''}</strong>
+   <div class="small">${e.img?'選択済み':'未選択'}</div>
+  </div>`;
+
+  const c=document.createElement('div');
+  c.className='row';
+
+  const l=document.createElement('label');
+  l.className='fileBtn';
+  l.textContent='写真を選択';
+
+  const inp=document.createElement('input');
+  inp.type='file';
+  inp.accept='image/*';
+  inp.onchange=async ev=>{
+   if(ev.target.files[0]){
+    state.active={type:'left',index:i};
+    await setFile(e,ev.target.files[0]);
+   }
+  };
+  l.appendChild(inp);
+
+  const b=document.createElement('button');
+  b.className=isActive?'active':'outline';
+  b.textContent=isActive?'編集中':'調整';
+  b.onclick=()=>{
+   state.active={type:'left',index:i};
+   renderAll();
+  };
+
+  c.append(l,b);
+  r.append(c);
+  box.append(r);
+ });
+}
 function renderAlbumList(){const box=$('albumList');box.innerHTML='';state.albums.forEach((e,i)=>{const d=document.createElement('div');d.className='albumItem';d.innerHTML=`<img src="${e.imgData}"><div class="small">写真 ${i+1}</div>`;box.append(d)})}
 
 function activeTargetMm(){
@@ -483,7 +527,27 @@ function updatePhotoInfo(){
  }
 }
 
-function renderAll(){renderLefts();renderAlbumList();if(state.mode==='goods'){drawPreview($('leftCanvas'),'left',state.lefts[state.active.index]||state.lefts[0]);drawPreview($('rightCanvas'),'right',state.common);$('editorTitle').textContent=state.active.type==='right'?'右側・共通写真':`左側写真 ${state.active.index+1}`}else if(state.mode==='photo'){drawPreview($('singleCanvas'),'single',state.single,'rect');$('editorTitle').textContent='写真用紙'}const e=activeEdit();$('scale').value=e.scale*100;$('rot').value=e.rot;$('scaleLabel').textContent=Math.round(e.scale*100)+'%';$('rotLabel').textContent=Math.round(e.rot)+'°';document.querySelectorAll('[data-preset]').forEach(b=>{b.classList.toggle('active',b.dataset.preset===e.preset);b.classList.toggle('outline',b.dataset.preset!==e.preset)});updateQualityCheck();
+
+function updateEditingSelection(){
+ const isRight=state.mode==='goods'&&state.active.type==='right';
+ const isLeft=state.mode==='goods'&&state.active.type==='left';
+
+ $('leftPanel').classList.toggle('active',isLeft);
+ $('rightPanel').classList.toggle('active',isRight);
+
+ $('leftPreviewPane').classList.toggle('active',isLeft);
+ $('rightPreviewPane').classList.toggle('active',isRight);
+
+ $('chooseLeft').classList.toggle('active',isLeft);
+ $('chooseLeft').classList.toggle('outline',!isLeft);
+ $('chooseLeft').textContent=isLeft?'左側を編集中':'左側を調整';
+
+ $('chooseRight').classList.toggle('active',isRight);
+ $('chooseRight').classList.toggle('outline',!isRight);
+ $('chooseRight').textContent=isRight?'右側を編集中':'右側を調整';
+}
+
+function renderAll(){renderLefts();renderAlbumList();updateEditingSelection();if(state.mode==='goods'){drawPreview($('leftCanvas'),'left',state.lefts[state.active.index]||state.lefts[0]);drawPreview($('rightCanvas'),'right',state.common);$('editorTitle').textContent=state.active.type==='right'?'右側・共通写真':`左側写真 ${state.active.index+1}`}else if(state.mode==='photo'){drawPreview($('singleCanvas'),'single',state.single,'rect');$('editorTitle').textContent='写真用紙'}const e=activeEdit();$('scale').value=e.scale*100;$('rot').value=e.rot;$('scaleLabel').textContent=Math.round(e.scale*100)+'%';$('rotLabel').textContent=Math.round(e.rot)+'°';document.querySelectorAll('[data-preset]').forEach(b=>{b.classList.toggle('active',b.dataset.preset===e.preset);b.classList.toggle('outline',b.dataset.preset!==e.preset)});updateQualityCheck();
 updatePhotoInfo();
 $('showOriginal').classList.toggle('active',state.compareOriginal);
 $('showOriginal').classList.toggle('outline',!state.compareOriginal);
@@ -521,7 +585,12 @@ document.querySelectorAll('.templateCard').forEach(b=>{
 function setMode(m){state.mode=m;['Goods','Photo','Album'].forEach(x=>{$('mode'+x).classList.toggle('active',m===x.toLowerCase());$('mode'+x).classList.toggle('outline',m!==x.toLowerCase())});$('goodsSection').classList.toggle('hidden',m!=='goods');$('photoSection').classList.toggle('hidden',m!=='photo');$('albumSection').classList.toggle('hidden',m!=='album');$('goodsPreview').classList.toggle('hidden',m!=='goods');$('singleCanvas').classList.toggle('hidden',m!=='photo');renderAll()}
 $('modeGoods').onclick=()=>setMode('goods');$('modePhoto').onclick=()=>setMode('photo');$('modeAlbum').onclick=()=>setMode('album');
 
-$('commonFile').onchange=e=>e.target.files[0]&&setFile(state.common,e.target.files[0]);$('singleFile').onchange=e=>e.target.files[0]&&setFile(state.single,e.target.files[0]);
+$('commonFile').onchange=async e=>{
+ if(e.target.files[0]){
+  state.active={type:'right',index:-1};
+  await setFile(state.common,e.target.files[0]);
+ }
+};$('singleFile').onchange=e=>e.target.files[0]&&setFile(state.single,e.target.files[0]);
 
 function aiArrangeAlbum(){
  const layout=+$('albumLayout').value;
@@ -557,7 +626,17 @@ $('aiAlbumLayout').onclick=aiArrangeAlbum;
 
 $('albumFiles').onchange=async e=>{for(const f of e.target.files){const d=await fileData(f);state.albums.push({imgData:d,img:await imageFrom(d)})}renderAll()};
 $('addLeft').onclick=()=>{if(state.lefts.length<4){state.lefts.push(emptyEdit());renderAll()}};
-$('chooseRight').onclick=()=>{state.active={type:'right',index:-1};renderAll()};$('chooseLeft').onclick=()=>{state.active={type:'left',index:0};renderAll()};
+$('chooseRight').onclick=()=>{
+ state.active={type:'right',index:-1};
+ renderAll();
+};
+$('chooseLeft').onclick=()=>{
+ const currentIndex=state.active.type==='left'
+  ? Math.max(0,state.active.index)
+  : 0;
+ state.active={type:'left',index:Math.min(currentIndex,state.lefts.length-1)};
+ renderAll();
+};
 $('rightPortrait').onclick=()=>{state.common.landscape=false;renderAll()};$('rightLandscape').onclick=()=>{state.common.landscape=true;renderAll()};
 $('pairMinus').onclick=()=>{$('pairCopies').value=Math.max(1,+$('pairCopies').value-1);renderAll()};$('pairPlus').onclick=()=>{$('pairCopies').value=+$('pairCopies').value+1;renderAll()};$('pairCopies').oninput=renderAll;
 $('scale').oninput=e=>{activeEdit().scale=+e.target.value/100;renderAll()};$('rot').oninput=e=>{activeEdit().rot=+e.target.value;renderAll()};$('rotate90').onclick=()=>{pushUndo(activeEdit());activeEdit().rot=(activeEdit().rot+90)%360;renderAll()};$('flipH').onclick=()=>{pushUndo(activeEdit());activeEdit().flipH=!activeEdit().flipH;renderAll()};$('reset').onclick=()=>{pushUndo(activeEdit());Object.assign(activeEdit(),emptyEdit(),{img:activeEdit().img,imgData:activeEdit().imgData});renderAll()};$('undo').onclick=doUndo;
@@ -791,8 +870,8 @@ async function compactImageData(edit,maxSide=900,quality=.72){
 
 function projectPayload(){
  return {
-  app:'Photo Template Studio v3.5 Stable',
-  version:7,
+  app:'Photo Template Studio v3.6 Stable',
+  version:8,
   mode:state.mode,
   compareOriginal:false,
   active:state.active,
