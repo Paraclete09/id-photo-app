@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Photo Template Studio v4.1 Final</title>
+<title>Photo Template Studio v4.2 Final</title>
 <style>
 :root{--bg:#f4f7fb;--card:#fff;--ink:#172033;--muted:#667085;--line:#d9e1ec;--pri:#315efb;--pri2:#244bd8;--sec:#0f766e;--danger:#b42318}
 *{box-sizing:border-box}
@@ -120,8 +120,8 @@ summary{cursor:pointer;font-weight:800;min-height:40px;display:flex;align-items:
 <body>
 <div class="wrap">
 <header>
-<h1>Photo Template Studio v4.1 Final</h1>
-<div class="small">キーチェーン向け顔優先AIトリミング、写真用紙、アルバム作成に対応した完成版です。</div>
+<h1>Photo Template Studio v4.2 Final</h1>
+<div class="small">キーチェーン向け顔優先AIトリミング、写真用紙、アルバム作成に対応した最終調整版です。</div>
 </header>
 
 <div class="tabs">
@@ -247,7 +247,7 @@ summary{cursor:pointer;font-weight:800;min-height:40px;display:flex;align-items:
 </div>
 <canvas id="singleCanvas" class="editor hidden" width="660" height="800"></canvas>
 
-<div class="small" style="margin-top:8px">写真をドラッグして位置を調整できます。</div>
+<div class="small" style="margin-top:8px">写真をドラッグして位置を微調整できます。AI調整後も手動で直せます。</div>
 <div style="margin-top:10px"><span class="badge">編集中</span> <strong id="editorTitle">右側・共通写真</strong></div>
 
 <div class="aiPanel" style="margin-top:8px">
@@ -276,9 +276,15 @@ summary{cursor:pointer;font-weight:800;min-height:40px;display:flex;align-items:
 <button id="aiCrop" class="secondary">AIトリミングのみ</button>
 <button id="undo" class="outline">1つ前に戻る</button>
 </div>
-<label class="small" style="display:block;margin-top:8px">
-<input id="faceGuide" type="checkbox" checked> 顔・頭部の安全ガイドを表示
+<details>
+<summary>補助表示</summary>
+<label class="small" style="display:block">
+<input id="faceGuide" type="checkbox"> 顔位置ガイドを表示
 </label>
+<div class="small" style="margin-top:5px">
+頭や顔の位置を確認したいときだけオンにしてください。印刷データには表示されません。
+</div>
+</details>
 
 <div class="compareRow" style="margin-top:8px">
 <button id="showOriginal" class="outline">補正前を表示</button>
@@ -347,7 +353,7 @@ summary{cursor:pointer;font-weight:800;min-height:40px;display:flex;align-items:
 <script>
 const $=id=>document.getElementById(id), MM=1240/210;
 const emptyEdit=()=>({img:null,imgData:null,xNorm:0,yNorm:0,scale:1,rot:0,flipH:false,preset:'normal',brightness:0,contrast:0,saturation:0,transformVersion:2});
-const state={mode:'goods',compareOriginal:false,faceGuide:true,active:{type:'right',index:-1},common:{...emptyEdit(),landscape:false},lefts:[emptyEdit()],single:emptyEdit(),albums:[],leftW:24.5,leftH:33.5,rightW:24.5,rightH:33.5,pairCopies:1};
+const state={mode:'goods',compareOriginal:false,faceGuide:false,active:{type:'right',index:-1},common:{...emptyEdit(),landscape:false},lefts:[emptyEdit()],single:emptyEdit(),albums:[],leftW:24.5,leftH:33.5,rightW:24.5,rightH:33.5,pairCopies:1};
 const undoMap=new WeakMap();
 
 function snapshot(e){return {...e,img:e.img}}
@@ -706,7 +712,7 @@ $('rightPortrait').onclick=()=>{state.common.landscape=false;renderAll()};$('rig
 $('pairMinus').onclick=()=>{$('pairCopies').value=Math.max(1,+$('pairCopies').value-1);renderAll()};$('pairPlus').onclick=()=>{$('pairCopies').value=+$('pairCopies').value+1;renderAll()};$('pairCopies').oninput=renderAll;
 $('scale').oninput=e=>{activeEdit().scale=+e.target.value/100;renderAll()};$('rot').oninput=e=>{activeEdit().rot=+e.target.value;renderAll()};$('rotate90').onclick=()=>{pushUndo(activeEdit());activeEdit().rot=(activeEdit().rot+90)%360;renderAll()};$('flipH').onclick=()=>{pushUndo(activeEdit());activeEdit().flipH=!activeEdit().flipH;renderAll()};$('reset').onclick=()=>{pushUndo(activeEdit());Object.assign(activeEdit(),emptyEdit(),{img:activeEdit().img,imgData:activeEdit().imgData});renderAll()};$('undo').onclick=doUndo;
 document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{pushUndo(activeEdit());activeEdit().preset=b.dataset.preset;state.compareOriginal=false;
-  state.faceGuide=p.faceGuide!==false;
+  state.faceGuide=Boolean(p.faceGuide);
   if($('faceGuide'))$('faceGuide').checked=state.faceGuide;renderAll()});
 
 
@@ -913,7 +919,7 @@ async function aiRecommendAll(){
 
  e.preset=preset;
  state.compareOriginal=false;
-  state.faceGuide=p.faceGuide!==false;
+  state.faceGuide=Boolean(p.faceGuide);
   if($('faceGuide'))$('faceGuide').checked=state.faceGuide;
  result.textContent=reason;
  renderAll();
@@ -925,7 +931,7 @@ $('showOriginal').onclick=()=>{
 };
 $('showEdited').onclick=()=>{
  state.compareOriginal=false;
-  state.faceGuide=p.faceGuide!==false;
+  state.faceGuide=Boolean(p.faceGuide);
   if($('faceGuide'))$('faceGuide').checked=state.faceGuide;
  renderAll();
 };
@@ -1022,8 +1028,8 @@ async function compactImageData(edit,maxSide=900,quality=.72){
 
 function projectPayload(){
  return {
-  app:'Photo Template Studio v4.1 Final',
-  version:10,
+  app:'Photo Template Studio v4.2 Final',
+  version:11,
   mode:state.mode,
   compareOriginal:false,
   faceGuide:state.faceGuide,
@@ -1164,7 +1170,7 @@ $('loadProject').onchange=async e=>{
   state.single=p.single;
   state.albums=p.albums;
   state.compareOriginal=false;
-  state.faceGuide=p.faceGuide!==false;
+  state.faceGuide=Boolean(p.faceGuide);
   if($('faceGuide'))$('faceGuide').checked=state.faceGuide;
 
   $('leftW').value=p.leftW;
@@ -1291,6 +1297,7 @@ bindManualDrag($('leftCanvas'),'left');
 bindManualDrag($('rightCanvas'),'right');
 bindManualDrag($('singleCanvas'),'single');
 
+if($('faceGuide'))$('faceGuide').checked=state.faceGuide;
 renderAll();
 </script>
 </body>
