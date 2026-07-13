@@ -422,7 +422,59 @@ function renderSheet(){
   for(const job of jobs){const rd=dimsFor('common'),lw=state.leftW*MM,lh=state.leftH*MM,rw=rd.w*MM,rh=rd.h*MM,setW=lw+gap+rw,setH=Math.max(lh,rh);if(x+setW>c.width-margin){x=margin;y+=setH+rowGap}if(y+setH>c.height-margin)return;const a=drawPiece(ctx,job.e,x,y,state.leftW,state.leftH,'oval');const b=drawPiece(ctx,state.common,x+a.w+gap,y,rd.w,rd.h,'oval');if($('labels').checked){ctx.fillStyle='#526071';ctx.font='17px sans-serif';ctx.textAlign='center';ctx.fillText(job.label,x+(a.w+gap+b.w)/2,y+setH+20)}x+=setW+gap}
  }else{const d=dimsFor('single'),iw=d.w*MM,ih=d.h*MM;for(let i=0;i<state.singleQty;i++){if(x+iw>c.width-margin){x=margin;y+=ih+rowGap}if(y+ih>c.height-margin)return;drawPiece(ctx,state.single,x,y,d.w,d.h,d.shape);x+=iw+gap}}
 }
-$('cutLine').onchange=renderSheet;$('labels').onchange=renderSheet;function savePNG(canvas,name){const a=document.createElement('a');a.download=name;a.href=canvas.toDataURL('image/png');a.click()}$('downloadSheet').onclick=$('downloadSheetMobile').onclick=()=>{renderSheet();savePNG($('sheetCanvas'),'photo-template-A4.png')};$('printSheet').onclick=$('printSheetMobile').onclick=()=>{renderSheet();window.print()};
+$('cutLine').onchange=renderSheet;
+$('labels').onchange=renderSheet;
+
+function savePNG(canvas,name){
+ const a=document.createElement('a');
+ a.download=name;
+ a.href=canvas.toDataURL('image/png');
+ a.click();
+}
+
+function printCanvasOnly(canvas,title='Photo Template Studio'){
+ const dataUrl=canvas.toDataURL('image/png');
+ const win=window.open('','_blank');
+ if(!win){
+  alert('印刷画面を開けませんでした。ポップアップを許可してから再度お試しください。');
+  return;
+ }
+ win.document.open();
+ win.document.write(`<!doctype html>
+ <html lang="ja">
+ <head>
+ <meta charset="utf-8">
+ <title>${title}</title>
+ <style>
+  @page{size:A4 portrait;margin:0}
+  html,body{margin:0;padding:0;width:210mm;height:297mm;background:#fff}
+  body{display:flex;align-items:flex-start;justify-content:center}
+  img{display:block;width:210mm;height:297mm;object-fit:contain}
+  @media screen{
+   body{background:#e5e7eb;padding:16px;box-sizing:border-box}
+   img{box-shadow:0 4px 20px rgba(0,0,0,.18);background:#fff}
+  }
+ </style>
+ </head>
+ <body>
+ <img src="${dataUrl}" alt="印刷シート">
+ <script>
+  const img=document.querySelector('img');
+  img.onload=()=>setTimeout(()=>window.print(),250);
+ <\/script>
+ </body>
+ </html>`);
+ win.document.close();
+}
+
+$('downloadSheet').onclick=$('downloadSheetMobile').onclick=()=>{
+ renderSheet();
+ savePNG($('sheetCanvas'),'photo-template-A4.png');
+};
+$('printSheet').onclick=$('printSheetMobile').onclick=()=>{
+ renderSheet();
+ printCanvasOnly($('sheetCanvas'),'Photo Template Studio 印刷');
+};
 function serial(e){const o={...e};delete o.img;return o}
 function project(){return{app:'Photo Template Studio Pro',version:4,mode:state.mode,leftW:state.leftW,leftH:state.leftH,rightW:state.rightW,rightH:state.rightH,sameSize:state.sameSize,freeW:state.freeW,freeH:state.freeH,freeShape:state.freeShape,pairCopies:state.pairCopies,singleQty:state.singleQty,common:serial(state.common),lefts:state.lefts.map(serial),single:serial(state.single)}}
 function downloadJSON(o,name){const b=new Blob([JSON.stringify(o)],{type:'application/json'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)}
@@ -446,7 +498,7 @@ async function addOrders(files){for(const f of files){try{const p=migrate(JSON.p
 $('shopFiles').onchange=e=>addOrders([...e.target.files]);$('clearOrders').onclick=()=>{state.orders=[];renderShop()};
 function renderShop(){const list=$('orderList');list.innerHTML='';state.orders.forEach((o,i)=>{const d=document.createElement('div');d.className='infoBox';d.innerHTML=`<strong>注文 ${i+1}</strong><br>${o._name||''}`;const b=document.createElement('button');b.className='outline';b.textContent='削除';b.onclick=()=>{state.orders.splice(i,1);renderShop()};d.appendChild(b);list.appendChild(d)});$('shopStatus').textContent=`${state.orders.length}件読み込み済み`;renderShopSheet()}
 function renderShopSheet(){const c=$('shopCanvas'),ctx=c.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);const margin=14*MM,gap=7*MM,rowGap=10*MM;let x=margin,y=margin;for(const o of state.orders){if((o.mode==='key'||o.mode==='keychain')&&o.lefts){const lw=(o.leftW||24),lh=(o.leftH||33),rw=(o.rightW||24.5),rh=(o.rightH||33.5);for(const l of o.lefts){for(let q=0;q<(o.pairCopies||l.qty||1);q++){const rd=o.common?.landscape?{w:rh,h:rw}:{w:rw,h:rh},setW=(lw+rd.w+7)*MM,setH=Math.max(lh,rd.h)*MM;if(x+setW>c.width-margin){x=margin;y+=setH+rowGap}if(y+setH>c.height-margin)return;const a=drawPiece(ctx,l,x,y,lw,lh,'oval');drawPiece(ctx,o.common,x+a.w+gap,y,rd.w,rd.h,'oval');x+=setW}}}else{const d=o.mode==='id'?{w:30,h:40,shape:'rect'}:{w:o.freeW||30,h:o.freeH||40,shape:o.freeShape||'rect'},qty=o.singleQty||4;for(let i=0;i<qty;i++){if(x+d.w*MM>c.width-margin){x=margin;y+=d.h*MM+rowGap}if(y+d.h*MM>c.height-margin)return;drawPiece(ctx,o.single,x,y,d.w,d.h,d.shape);x+=(d.w+7)*MM}}}}
-$('shopDownload').onclick=()=>{renderShopSheet();savePNG($('shopCanvas'),'shop-orders-A4.png')};$('shopPrint').onclick=()=>{renderShopSheet();window.print()};
+$('shopDownload').onclick=()=>{renderShopSheet();savePNG($('shopCanvas'),'shop-orders-A4.png')};$('shopPrint').onclick=()=>{renderShopSheet();printCanvasOnly($('shopCanvas'),'Photo Template Studio ショップ印刷')};
 refreshTemplates();renderAll();renderShop();
 </script>
 </body>
