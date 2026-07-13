@@ -3,19 +3,19 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Photo Template Studio v3.0</title>
+<title>Photo Template Studio v3.4</title>
 <style>
 :root{--bg:#f4f7fb;--card:#fff;--ink:#172033;--muted:#667085;--line:#d9e1ec;--pri:#315efb;--pri2:#244bd8;--sec:#0f766e;--danger:#b42318}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Sans","Yu Gothic",sans-serif}
-.wrap{max-width:1240px;margin:auto;padding:12px}
+.wrap{max-width:1500px;margin:auto;padding:14px}
 header,.card{background:#fff;border:1px solid var(--line);border-radius:20px;box-shadow:0 10px 28px rgba(16,24,40,.06)}
 header{padding:18px;margin-bottom:12px}
 h1{font-size:clamp(23px,4vw,34px);margin:0 0 6px}
 h2{font-size:19px;margin:0 0 12px}
 h3{font-size:16px;margin:0 0 8px}
 .small{font-size:13px;color:var(--muted);line-height:1.65}
-.grid{display:grid;grid-template-columns:1.15fr .85fr;gap:12px}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
 .card{padding:14px;margin-bottom:12px}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 button,.fileBtn,input,select{font:inherit}
@@ -43,7 +43,7 @@ canvas.editor{display:block;width:100%;height:auto;background:#dfe6ef;border-rad
 .labelrow{display:flex;justify-content:space-between;gap:8px;font-size:14px;font-weight:700;margin-bottom:6px}
 .toolbar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .toolbar button{width:100%}
-.sheet{background:#fff;border:1px solid var(--line);border-radius:17px;padding:8px;overflow:auto}
+.sheet{background:#fff;border:1px solid var(--line);border-radius:17px;padding:8px;overflow:auto;min-width:0}
 #printCanvas{display:block;max-width:100%;height:auto;margin:auto;background:#fff;box-shadow:0 6px 20px rgba(16,24,40,.08)}
 .hidden{display:none!important}
 .status{margin-top:8px;font-size:13px;color:var(--muted)}
@@ -66,6 +66,18 @@ summary{cursor:pointer;font-weight:800;min-height:40px;display:flex;align-items:
 .mockupBox{border:1px solid var(--line);border-radius:16px;padding:10px;background:linear-gradient(180deg,#fafafa,#eceff3)}
 #mockupCanvas{display:block;width:100%;height:auto;border-radius:12px;background:#dfe3e8}
 .aiPanel{border:1px solid #b8c8ff;background:#f3f6ff;border-radius:14px;padding:10px}
+.photoInfoGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.photoInfoItem{border:1px solid var(--line);border-radius:12px;padding:9px;background:#fff}
+.photoInfoItem strong{display:block;font-size:12px;color:var(--muted);margin-bottom:3px}
+.compareRow{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.compareRow button{width:100%}
+.dpiGood{color:#166534}
+.dpiWarn{color:#7a4c00}
+.dpiBad{color:#9f1f17}
+@media(min-width:1200px){
+ main>.card:first-child{margin-top:0}
+ aside>.card:first-child{margin-top:0}
+}
 .aiPanel strong{display:block;margin-bottom:4px}
 
 .albumItem{border:1px solid var(--line);border-radius:12px;padding:8px;background:#fff}
@@ -75,7 +87,7 @@ summary{cursor:pointer;font-weight:800;min-height:40px;display:flex;align-items:
  .wrap{padding:8px}.card,header{border-radius:16px}.pairGrid,.toolbar{grid-template-columns:1fr}
  .tabs{display:grid;grid-template-columns:1fr}.tabs button{width:100%}
  button,.fileBtn{min-height:48px;font-size:15px}.photoRow{grid-template-columns:1fr}.photoRow .row{display:grid;grid-template-columns:1fr 1fr}
- .previewStage{grid-template-columns:1fr 1fr}.presetGrid{grid-template-columns:1fr}.albumGrid{grid-template-columns:repeat(2,1fr)}.templateGallery{grid-template-columns:1fr 1fr}
+ .previewStage{grid-template-columns:1fr 1fr}.presetGrid{grid-template-columns:1fr}.albumGrid{grid-template-columns:repeat(2,1fr)}.templateGallery{grid-template-columns:1fr 1fr}.photoInfoGrid{grid-template-columns:1fr}
  canvas.editor{max-height:44vh;object-fit:contain}
 }
 </style>
@@ -190,8 +202,13 @@ summary{cursor:pointer;font-weight:800;min-height:40px;display:flex;align-items:
 
 <section class="card">
 <h2>保存・共有</h2>
-<div class="row"><button id="saveProject">保存</button><label class="fileBtn secondary" for="loadProject">読み込み</label><input id="loadProject" type="file" accept=".json,.txt,.ptstudio"></div>
-<div id="status" class="status"></div>
+<div class="row">
+<button id="shareProject">LINE用データを作成</button>
+<button id="saveProject" class="outline">高画質で保存</button>
+<label class="fileBtn secondary" for="loadProject">読み込み</label>
+<input id="loadProject" type="file" accept=".json,.txt,.ptstudio,.ptorder,text/plain,application/json">
+</div>
+<div id="status" class="status">LINE用データは写真を軽量化したTXTとして保存・共有できます。</div>
 </section>
 
 </main>
@@ -217,6 +234,24 @@ summary{cursor:pointer;font-weight:800;min-height:40px;display:flex;align-items:
 <button id="aiCrop" class="secondary">AIトリミングのみ</button>
 <button id="undo" class="outline">1つ前に戻る</button>
 </div>
+<div class="compareRow" style="margin-top:8px">
+<button id="showOriginal" class="outline">補正前を表示</button>
+<button id="showEdited" class="active">補正後を表示</button>
+</div>
+
+<details open>
+<summary>写真情報・印刷品質</summary>
+<div class="photoInfoGrid">
+<div class="photoInfoItem"><strong>元画像サイズ</strong><span id="imagePxInfo">写真未選択</span></div>
+<div class="photoInfoItem"><strong>縦横比</strong><span id="aspectInfo">—</span></div>
+<div class="photoInfoItem"><strong>300dpi推奨最大</strong><span id="maxPrintInfo">—</span></div>
+<div class="photoInfoItem"><strong>現在の実効dpi</strong><span id="effectiveDpiInfo">—</span></div>
+</div>
+<div id="cameraAdvice" class="small" style="margin-top:8px">
+一眼レフなど高解像度の写真では、大きな用紙でもきれいに印刷しやすくなります。
+</div>
+</details>
+
 <div class="control"><div class="labelrow"><span>拡大</span><span id="scaleLabel">100%</span></div><input id="scale" type="range" min="50" max="300" value="100"></div>
 <div class="control"><div class="labelrow"><span>回転</span><span id="rotLabel">0°</span></div><input id="rot" type="range" min="-180" max="180" value="0"></div>
 <div class="toolbar"><button id="rotate90">90°回転</button><button id="flipH" class="outline">左右反転</button><button id="reset" class="outline">リセット</button></div>
@@ -243,14 +278,14 @@ summary{cursor:pointer;font-weight:800;min-height:40px;display:flex;align-items:
 </details>
 
 <div id="mockupSection" style="margin-top:14px">
-<h2>完成イメージ</h2>
+<h2>完成イメージ（印刷と同じ配置）</h2>
 <div class="mockupBox">
 <canvas id="mockupCanvas" width="760" height="430"></canvas>
 </div>
-<div class="small" style="margin-top:6px">実際の透明感や厚みは製品により異なります。</div>
+<div class="small" style="margin-top:6px">写真の位置・拡大・回転は印刷プレビューと同じです。外枠の透明感や厚みのみイメージ表示です。</div>
 </div>
 
-<h2 style="margin-top:14px">印刷プレビュー</h2>
+<h2 style="margin-top:14px">印刷プレビュー（最終出力）</h2><div class="small" style="margin-bottom:7px">実際に保存・印刷される位置はこちらです。</div>
 <div class="sheet"><canvas id="printCanvas" width="1240" height="1754"></canvas></div>
 <div class="row" style="margin-top:8px"><button id="savePng">PNG保存</button><button id="savePdf" class="secondary">印刷用PDF</button></div>
 </section>
@@ -260,8 +295,8 @@ summary{cursor:pointer;font-weight:800;min-height:40px;display:flex;align-items:
 
 <script>
 const $=id=>document.getElementById(id), MM=1240/210;
-const emptyEdit=()=>({img:null,imgData:null,xNorm:0,yNorm:0,scale:1,rot:0,flipH:false,preset:'normal',brightness:0,contrast:0,saturation:0});
-const state={mode:'goods',active:{type:'right',index:-1},common:{...emptyEdit(),landscape:false},lefts:[emptyEdit()],single:emptyEdit(),albums:[],leftW:24,leftH:33,rightW:24.5,rightH:33.5,pairCopies:1};
+const emptyEdit=()=>({img:null,imgData:null,xNorm:0,yNorm:0,scale:1,rot:0,flipH:false,preset:'normal',brightness:0,contrast:0,saturation:0,transformVersion:2});
+const state={mode:'goods',compareOriginal:false,active:{type:'right',index:-1},common:{...emptyEdit(),landscape:false},lefts:[emptyEdit()],single:emptyEdit(),albums:[],leftW:24,leftH:33,rightW:24.5,rightH:33.5,pairCopies:1};
 const undoMap=new WeakMap();
 
 function snapshot(e){return {...e,img:e.img}}
@@ -280,7 +315,22 @@ function dims(side){
 }
 function ellipse(ctx,x,y,w,h){const k=.5522848,rx=w/2,ry=h/2,cx=x+rx,cy=y+ry;ctx.beginPath();ctx.moveTo(cx,y);ctx.bezierCurveTo(cx+rx*k,y,x+w,cy-ry*k,x+w,cy);ctx.bezierCurveTo(x+w,cy+ry*k,cx+rx*k,y+h,cx,y+h);ctx.bezierCurveTo(cx-rx*k,y+h,x,cy+ry*k,x,cy);ctx.bezierCurveTo(x,cy-ry*k,cx-rx*k,y,cx,y);ctx.closePath()}
 function rect(ctx,x,y,w,h){ctx.beginPath();ctx.rect(x,y,w,h);ctx.closePath()}
-function filterFor(e){const p={normal:'none',auto:'brightness(1.06) contrast(1.05) saturate(1.06)',bright:'brightness(1.14) contrast(1.04)',soft:'brightness(1.08) contrast(.92) saturate(.95)',skin:'brightness(1.11) contrast(.97) saturate(.93)',vivid:'brightness(1.05) contrast(1.12) saturate(1.18)',travel:'brightness(1.09) contrast(1.10) saturate(1.15)',night:'brightness(1.13) contrast(1.07) saturate(1.09)',sharp:'brightness(1.03) contrast(1.18) saturate(1.05)',mono:'grayscale(1) contrast(1.12)'};return p[e.preset]||'none'}
+function filterFor(e){
+ if(state.compareOriginal)return 'none';
+ const p={
+  normal:'none',
+  auto:'brightness(1.06) contrast(1.05) saturate(1.06)',
+  bright:'brightness(1.14) contrast(1.04)',
+  soft:'brightness(1.08) contrast(.92) saturate(.95)',
+  skin:'brightness(1.11) contrast(.97) saturate(.93)',
+  vivid:'brightness(1.05) contrast(1.12) saturate(1.18)',
+  travel:'brightness(1.09) contrast(1.10) saturate(1.15)',
+  night:'brightness(1.13) contrast(1.07) saturate(1.09)',
+  sharp:'brightness(1.03) contrast(1.18) saturate(1.05)',
+  mono:'grayscale(1) contrast(1.12)'
+ };
+ return p[e.preset]||'none';
+}
 function drawImage(ctx,e,x,y,w,h){if(!e.img)return;const base=Math.max(w/e.img.width,h/e.img.height)*e.scale;ctx.filter=filterFor(e);ctx.translate(x+w/2+e.xNorm*w,y+h/2+e.yNorm*h);ctx.rotate(e.rot*Math.PI/180);ctx.scale(e.flipH?-1:1,1);ctx.drawImage(e.img,-e.img.width*base/2,-e.img.height*base/2,e.img.width*base,e.img.height*base);ctx.filter='none'}
 function drawPreview(canvas,side,e,shape='oval'){const ctx=canvas.getContext('2d'),d=dims(side);ctx.clearRect(0,0,canvas.width,canvas.height);ctx.fillStyle='#dfe6ef';ctx.fillRect(0,0,canvas.width,canvas.height);const pad=34,sc=Math.min((canvas.width-pad*2)/d.w,(canvas.height-pad*2)/d.h),w=d.w*sc,h=d.h*sc,x=(canvas.width-w)/2,y=(canvas.height-h)/2;ctx.save();shape==='oval'?ellipse(ctx,x,y,w,h):rect(ctx,x,y,w,h);ctx.clip();if(e.img)drawImage(ctx,e,x,y,w,h);ctx.restore();ctx.strokeStyle='#315efb';ctx.lineWidth=3;shape==='oval'?ellipse(ctx,x,y,w,h):rect(ctx,x,y,w,h);ctx.stroke()}
 function renderLefts(){const box=$('leftList');box.innerHTML='';state.lefts.forEach((e,i)=>{const r=document.createElement('div');r.className='photoRow'+(state.active.type==='left'&&state.active.index===i?' active':'');r.innerHTML=`<div><strong>左側写真 ${i+1}</strong><div class="small">${e.img?'選択済み':'未選択'}</div></div>`;const c=document.createElement('div');c.className='row';const l=document.createElement('label');l.className='fileBtn';l.textContent='写真を選択';const inp=document.createElement('input');inp.type='file';inp.accept='image/*';inp.onchange=ev=>ev.target.files[0]&&setFile(e,ev.target.files[0]);l.appendChild(inp);const b=document.createElement('button');b.className='outline';b.textContent='調整';b.onclick=()=>{state.active={type:'left',index:i};renderAll()};c.append(l,b);r.append(c);box.append(r)})}
@@ -323,7 +373,94 @@ function updateQualityCheck(){
  }
 }
 
-function renderAll(){renderLefts();renderAlbumList();if(state.mode==='goods'){drawPreview($('leftCanvas'),'left',state.lefts[state.active.index]||state.lefts[0]);drawPreview($('rightCanvas'),'right',state.common);$('editorTitle').textContent=state.active.type==='right'?'右側・共通写真':`左側写真 ${state.active.index+1}`}else if(state.mode==='photo'){drawPreview($('singleCanvas'),'single',state.single,'rect');$('editorTitle').textContent='写真用紙'}const e=activeEdit();$('scale').value=e.scale*100;$('rot').value=e.rot;$('scaleLabel').textContent=Math.round(e.scale*100)+'%';$('rotLabel').textContent=Math.round(e.rot)+'°';document.querySelectorAll('[data-preset]').forEach(b=>{b.classList.toggle('active',b.dataset.preset===e.preset);b.classList.toggle('outline',b.dataset.preset!==e.preset)});updateQualityCheck();drawMockup();renderPrint()}
+
+function gcd(a,b){
+ a=Math.round(a);b=Math.round(b);
+ while(b){const t=b;b=a%b;a=t}
+ return a||1;
+}
+function currentTargetMm(){
+ if(state.mode==='goods'){
+  return state.active.type==='right'?dims('right'):dims('left');
+ }
+ if(state.mode==='photo')return dims('single');
+ if(state.mode==='album'){
+  const [paperW,paperH]=paperMm($('albumPaper').value);
+  const layout=+$('albumLayout').value;
+  const cols=layout===1?1:layout===2?2:layout===4?2:3;
+  const rows=Math.ceil(layout/cols);
+  return {w:paperW/cols,h:paperH/rows};
+ }
+ return null;
+}
+function updatePhotoInfo(){
+ const e=activeEdit();
+ const px=$('imagePxInfo'),aspect=$('aspectInfo'),maxPrint=$('maxPrintInfo'),
+       dpiInfo=$('effectiveDpiInfo'),advice=$('cameraAdvice');
+
+ if(!e?.img){
+  px.textContent='写真未選択';
+  aspect.textContent='—';
+  maxPrint.textContent='—';
+  dpiInfo.textContent='—';
+  dpiInfo.className='';
+  advice.textContent='写真を選択すると、印刷に適したサイズを確認できます。';
+  return;
+ }
+
+ const w=e.img.width,h=e.img.height;
+ px.textContent=`${w.toLocaleString()} × ${h.toLocaleString()} px`;
+
+ const g=gcd(w,h);
+ const rw=Math.round(w/g),rh=Math.round(h/g);
+ const commonRatios=[
+  {r:1,label:'1:1'},
+  {r:4/3,label:'4:3'},
+  {r:3/2,label:'3:2'},
+  {r:16/9,label:'16:9'}
+ ];
+ const actual=w/h;
+ let nearest=commonRatios.reduce((a,b)=>Math.abs(b.r-actual)<Math.abs(a.r-actual)?b:a);
+ aspect.textContent=Math.abs(nearest.r-actual)<.03?nearest.label:`${rw}:${rh}`;
+
+ const maxW=w/300*25.4,maxH=h/300*25.4;
+ maxPrint.textContent=`約 ${maxW.toFixed(0)} × ${maxH.toFixed(0)} mm`;
+
+ const target=currentTargetMm();
+ if(!target){
+  dpiInfo.textContent='—';
+  dpiInfo.className='';
+  return;
+ }
+
+ const cropScale=Math.max(1,e.scale||1);
+ const effectiveW=w/cropScale;
+ const effectiveH=h/cropScale;
+ const dpi=Math.min(
+  effectiveW/(target.w/25.4),
+  effectiveH/(target.h/25.4)
+ );
+
+ dpiInfo.textContent=`約 ${Math.round(dpi)} dpi`;
+ dpiInfo.className=dpi>=300?'dpiGood':dpi>=200?'dpiWarn':'dpiBad';
+
+ if(dpi>=300){
+  advice.textContent='高品質です。写真用紙への印刷に十分な解像度があります。';
+ }else if(dpi>=200){
+  advice.textContent='標準的な品質です。近くで見ると少し粗さが出る場合があります。';
+ }else{
+  advice.textContent='拡大しすぎか、元画像が小さい可能性があります。拡大率を下げるか、小さい用紙を選ぶと改善します。';
+ }
+}
+
+function renderAll(){renderLefts();renderAlbumList();if(state.mode==='goods'){drawPreview($('leftCanvas'),'left',state.lefts[state.active.index]||state.lefts[0]);drawPreview($('rightCanvas'),'right',state.common);$('editorTitle').textContent=state.active.type==='right'?'右側・共通写真':`左側写真 ${state.active.index+1}`}else if(state.mode==='photo'){drawPreview($('singleCanvas'),'single',state.single,'rect');$('editorTitle').textContent='写真用紙'}const e=activeEdit();$('scale').value=e.scale*100;$('rot').value=e.rot;$('scaleLabel').textContent=Math.round(e.scale*100)+'%';$('rotLabel').textContent=Math.round(e.rot)+'°';document.querySelectorAll('[data-preset]').forEach(b=>{b.classList.toggle('active',b.dataset.preset===e.preset);b.classList.toggle('outline',b.dataset.preset!==e.preset)});updateQualityCheck();
+updatePhotoInfo();
+$('showOriginal').classList.toggle('active',state.compareOriginal);
+$('showOriginal').classList.toggle('outline',!state.compareOriginal);
+$('showEdited').classList.toggle('active',!state.compareOriginal);
+$('showEdited').classList.toggle('outline',state.compareOriginal);
+drawMockup();
+renderPrint()}
 
 function setTemplatePreset(name){
  document.querySelectorAll('.templateCard').forEach(b=>{
@@ -377,6 +514,11 @@ function aiArrangeAlbum(){
   if(portrait.length)arranged.push(portrait.shift());
   if(square.length)arranged.push(square.shift());
  }
+ arranged.sort((a,b)=>{
+  const ap=(a.img?.width||0)*(a.img?.height||0);
+  const bp=(b.img?.width||0)*(b.img?.height||0);
+  return bp-ap;
+ });
  state.albums=arranged;
  $('albumLayoutStatus').textContent=`縦横のバランスを考慮して並び替えました。先頭${Math.min(layout,state.albums.length)}枚を使用します。`;
  renderAll();
@@ -389,7 +531,7 @@ $('chooseRight').onclick=()=>{state.active={type:'right',index:-1};renderAll()};
 $('rightPortrait').onclick=()=>{state.common.landscape=false;renderAll()};$('rightLandscape').onclick=()=>{state.common.landscape=true;renderAll()};
 $('pairMinus').onclick=()=>{$('pairCopies').value=Math.max(1,+$('pairCopies').value-1);renderAll()};$('pairPlus').onclick=()=>{$('pairCopies').value=+$('pairCopies').value+1;renderAll()};$('pairCopies').oninput=renderAll;
 $('scale').oninput=e=>{activeEdit().scale=+e.target.value/100;renderAll()};$('rot').oninput=e=>{activeEdit().rot=+e.target.value;renderAll()};$('rotate90').onclick=()=>{pushUndo(activeEdit());activeEdit().rot=(activeEdit().rot+90)%360;renderAll()};$('flipH').onclick=()=>{pushUndo(activeEdit());activeEdit().flipH=!activeEdit().flipH;renderAll()};$('reset').onclick=()=>{pushUndo(activeEdit());Object.assign(activeEdit(),emptyEdit(),{img:activeEdit().img,imgData:activeEdit().imgData});renderAll()};$('undo').onclick=doUndo;
-document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{pushUndo(activeEdit());activeEdit().preset=b.dataset.preset;renderAll()});
+document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{pushUndo(activeEdit());activeEdit().preset=b.dataset.preset;state.compareOriginal=false;renderAll()});
 
 
 function drawMockup(){
@@ -407,31 +549,43 @@ function drawMockup(){
  ctx.fillStyle='#d7dce3';
  ctx.fillRect(0,0,canvas.width,canvas.height);
 
- // outer product shell
+ const leftEdit=state.lefts[state.active.index]||state.lefts[0];
+ const leftDim=dims('left');
+ const rightDim=dims('right');
+
+ const maxSlotH=230;
+ const leftSlotW=maxSlotH*(leftDim.w/leftDim.h);
+ const rightSlotW=maxSlotH*(rightDim.w/rightDim.h);
+ const totalSlots=leftSlotW+rightSlotW+80;
+ const shellW=Math.max(580,totalSlots+110);
+ const shellH=310;
+ const shellX=(canvas.width-shellW)/2;
+ const shellY=(canvas.height-shellH)/2;
+
  ctx.save();
- ctx.translate(canvas.width/2,canvas.height/2);
- ctx.fillStyle='rgba(255,255,255,.82)';
+ ctx.fillStyle='rgba(255,255,255,.86)';
  ctx.strokeStyle='#a8b0bc';
  ctx.lineWidth=8;
- roundRect(ctx,-320,-150,640,300,85);
+ roundRect(ctx,shellX,shellY,shellW,shellH,80);
  ctx.fill();ctx.stroke();
 
- // hinge
+ const slotY=shellY+(shellH-maxSlotH)/2;
+ const leftX=canvas.width/2-40-leftSlotW;
+ const rightX=canvas.width/2+40;
+
+ drawMockupSlot(ctx,leftEdit,leftX,slotY,leftSlotW,maxSlotH);
+ drawMockupSlot(ctx,state.common,rightX,slotY,rightSlotW,maxSlotH);
+
  ctx.fillStyle='#8b949f';
- roundRect(ctx,-25,-170,50,340,18);
+ roundRect(ctx,canvas.width/2-18,shellY-16,36,shellH+32,14);
  ctx.fill();
 
- // photo slots
- drawMockupSlot(ctx,state.lefts[state.active.index]||state.lefts[0],-250,-115,205,230);
- drawMockupSlot(ctx,state.common,45,-115,205,230);
-
- // shine
- const grad=ctx.createLinearGradient(-320,-150,320,150);
- grad.addColorStop(0,'rgba(255,255,255,.55)');
- grad.addColorStop(.45,'rgba(255,255,255,.08)');
- grad.addColorStop(1,'rgba(255,255,255,.32)');
+ const grad=ctx.createLinearGradient(shellX,shellY,shellX+shellW,shellY+shellH);
+ grad.addColorStop(0,'rgba(255,255,255,.48)');
+ grad.addColorStop(.5,'rgba(255,255,255,.05)');
+ grad.addColorStop(1,'rgba(255,255,255,.28)');
  ctx.fillStyle=grad;
- roundRect(ctx,-320,-150,640,300,85);
+ roundRect(ctx,shellX,shellY,shellW,shellH,80);
  ctx.fill();
  ctx.restore();
 }
@@ -449,6 +603,7 @@ function roundRect(ctx,x,y,w,h,r){
  ctx.quadraticCurveTo(x,y,x+r,y);
  ctx.closePath();
 }
+
 function drawMockupSlot(ctx,e,x,y,w,h){
  ctx.save();
  ellipse(ctx,x,y,w,h);
@@ -459,7 +614,8 @@ function drawMockupSlot(ctx,e,x,y,w,h){
  ctx.restore();
  ctx.strokeStyle='#b7bec8';
  ctx.lineWidth=3;
- ellipse(ctx,x,y,w,h);ctx.stroke();
+ ellipse(ctx,x,y,w,h);
+ ctx.stroke();
 }
 
 async function aiCrop(){const e=activeEdit();if(!e.img){$('status').textContent='写真を選択してください。';return}pushUndo(e);try{if('FaceDetector'in window){const fd=new FaceDetector({fastMode:true,maxDetectedFaces:5});const faces=await fd.detect(e.img);if(faces.length){let minX=Infinity,minY=Infinity,maxX=0,maxY=0;faces.forEach(f=>{const b=f.boundingBox;minX=Math.min(minX,b.x);minY=Math.min(minY,b.y);maxX=Math.max(maxX,b.x+b.width);maxY=Math.max(maxY,b.y+b.height)});const cx=(minX+maxX)/2/e.img.width-.5,cy=(minY+maxY)/2/e.img.height-.5;e.xNorm=-cx;e.yNorm=-cy;e.scale=Math.max(1,Math.min(2.2,1/(Math.max((maxX-minX)/e.img.width,(maxY-minY)/e.img.height)*2.2)));$('status').textContent='顔を検出して中央へ配置しました。';renderAll();return}}e.xNorm=0;e.yNorm=0;e.scale=1;$('status').textContent='顔検出に未対応のため、中央基準で配置しました。';renderAll()}catch{e.xNorm=0;e.yNorm=0;e.scale=1;renderAll()}}
@@ -499,9 +655,20 @@ async function aiRecommendAll(){
  else if(m.saturation>.22&&m.mean>115){preset='travel';reason='明るく色のある写真なので、テーマパーク向けに整えました。'}
 
  e.preset=preset;
+ state.compareOriginal=false;
  result.textContent=reason;
  renderAll();
 }
+
+$('showOriginal').onclick=()=>{
+ state.compareOriginal=true;
+ renderAll();
+};
+$('showEdited').onclick=()=>{
+ state.compareOriginal=false;
+ renderAll();
+};
+
 $('aiAll').onclick=aiRecommendAll;
 
 
@@ -580,8 +747,179 @@ function renderPrint(){
 function saveCanvas(name,type='png'){const a=document.createElement('a');a.download=name;a.href=$('printCanvas').toDataURL(type==='jpg'?'image/jpeg':'image/png',.95);a.click()}
 $('savePng').onclick=()=>saveCanvas('photo-template.png');
 $('savePdf').onclick=()=>{const a=document.createElement('a');a.download='photo-template.jpg';a.href=$('printCanvas').toDataURL('image/jpeg',.96);a.click();$('status').textContent='PDF互換用の高画質JPGを保存しました。'};
-$('saveProject').onclick=()=>{const p={...state,common:{...state.common,img:null},lefts:state.lefts.map(e=>({...e,img:null})),single:{...state.single,img:null},albums:state.albums.map(e=>({...e,img:null}))};const b=new Blob([JSON.stringify(p)],{type:'application/json'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download='photo-template-v3.json';a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)};
-$('loadProject').onchange=async e=>{try{const p=JSON.parse(await e.target.files[0].text());Object.assign(state,p);for(const x of [state.common,state.single,...state.lefts,...state.albums])if(x.imgData)x.img=await imageFrom(x.imgData);setMode(state.mode||'goods')}catch{$('status').textContent='読み込みに失敗しました。'}};
+
+async function compactImageData(edit,maxSide=900,quality=.72){
+ if(!edit || (!edit.img && !edit.imgData))return edit?.imgData||null;
+ const image=edit.img || await imageFrom(edit.imgData);
+ const ratio=Math.min(1,maxSide/Math.max(image.width,image.height));
+ const canvas=document.createElement('canvas');
+ canvas.width=Math.max(1,Math.round(image.width*ratio));
+ canvas.height=Math.max(1,Math.round(image.height*ratio));
+ canvas.getContext('2d').drawImage(image,0,0,canvas.width,canvas.height);
+ return canvas.toDataURL('image/jpeg',quality);
+}
+
+function projectPayload(){
+ return {
+  app:'Photo Template Studio',
+  version:6,
+  mode:state.mode,
+  compareOriginal:false,
+  active:state.active,
+  leftW:+$('leftW').value,
+  leftH:+$('leftH').value,
+  rightW:+$('rightW').value,
+  rightH:+$('rightH').value,
+  pairCopies:+$('pairCopies').value||1,
+  common:{...state.common,img:null,transformVersion:2},
+  lefts:state.lefts.map(e=>({...e,img:null,transformVersion:2})),
+  single:{...state.single,img:null,transformVersion:2},
+  albums:state.albums.map(e=>({...e,img:null}))
+ };
+}
+
+async function compactProjectPayload(){
+ const p=projectPayload();
+ p.shareFormat='pts-light-v3';
+ p.common.imgData=await compactImageData(state.common);
+ p.single.imgData=await compactImageData(state.single);
+ for(let i=0;i<p.lefts.length;i++)p.lefts[i].imgData=await compactImageData(state.lefts[i]);
+ for(let i=0;i<p.albums.length;i++)p.albums[i].imgData=await compactImageData(state.albums[i],1200,.75);
+ return p;
+}
+
+function downloadText(content,name,type='application/json'){
+ const blob=new Blob([content],{type});
+ const url=URL.createObjectURL(blob);
+ const a=document.createElement('a');
+ a.href=url;a.download=name;a.click();
+ setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+
+$('shareProject').onclick=async()=>{
+ $('status').textContent='LINE用データを作成しています…';
+ try{
+  const compact=await compactProjectPayload();
+  const file=new File([JSON.stringify(compact)],'photo-template-share.txt',{type:'text/plain'});
+  if(navigator.share && (!navigator.canShare || navigator.canShare({files:[file]}))){
+   await navigator.share({
+    title:'Photo Template Studio 調整データ',
+    text:'このTXTファイルをPhoto Template Studioで読み込んでください。',
+    files:[file]
+   });
+   $('status').textContent='共有画面を開きました。';
+  }else{
+   const url=URL.createObjectURL(file);
+   const a=document.createElement('a');
+   a.href=url;a.download=file.name;a.click();
+   setTimeout(()=>URL.revokeObjectURL(url),1000);
+   $('status').textContent='LINE用TXTを保存しました。LINEでは「ファイル」として添付してください。';
+  }
+ }catch(e){
+  $('status').textContent=e?.name==='AbortError'?'共有をキャンセルしました。':'共有データの作成に失敗しました。';
+ }
+};
+
+$('saveProject').onclick=()=>{
+ downloadText(JSON.stringify(projectPayload()),'photo-template-project.ptstudio');
+ $('status').textContent='高画質プロジェクトを保存しました。';
+};
+
+function migrateEdit(src={},side='left'){
+ const e={...emptyEdit(),...src};
+
+ // v2+ normalized data
+ if(Number.isFinite(src.xNorm) && Number.isFinite(src.yNorm)){
+  e.xNorm=src.xNorm;
+  e.yNorm=src.yNorm;
+  e.transformVersion=2;
+  return e;
+ }
+
+ // Older versions stored movement in preview pixels.
+ // Their editor was usually 660x800 with a 48px margin.
+ const legacyX=Number(src.x||0);
+ const legacyY=Number(src.y||0);
+
+ if(legacyX||legacyY){
+  const d=side==='right'
+   ? {w:Number(src.landscape?33.5:24.5),h:Number(src.landscape?24.5:33.5)}
+   : {w:24.5,h:33.5};
+  const scale=Math.min((660-96)/d.w,(800-96)/d.h);
+  const frameW=d.w*scale;
+  const frameH=d.h*scale;
+  e.xNorm=legacyX/frameW;
+  e.yNorm=legacyY/frameH;
+ }else{
+  e.xNorm=0;
+  e.yNorm=0;
+ }
+ e.transformVersion=2;
+ return e;
+}
+
+function migrateProject(raw){
+ const p=raw.state||raw;
+
+ // Current / v3 family
+ if(p.common || p.lefts){
+  return {
+   mode:p.mode==='keychain'?'goods':(p.mode||'goods'),
+   active:p.active||{type:'right',index:-1},
+   leftW:Number(p.leftW||24.5),
+   leftH:Number(p.leftH||33.5),
+   rightW:Number(p.rightW||24.5),
+   rightH:Number(p.rightH||33.5),
+   pairCopies:Number(p.pairCopies||1),
+   common:migrateEdit(p.common||p.right||{},'right'),
+   lefts:(p.lefts||[p.left||{}]).map(e=>migrateEdit(e,'left')),
+   single:migrateEdit(p.single||{},'single'),
+   albums:(p.albums||[]).map(e=>({...e,img:null}))
+  };
+ }
+
+ // Very early left/right project
+ return {
+  mode:'goods',
+  active:{type:'right',index:-1},
+  leftW:24.5,leftH:33.5,rightW:24.5,rightH:33.5,pairCopies:1,
+  common:migrateEdit(p.right||{},'right'),
+  lefts:[migrateEdit(p.left||{},'left')],
+  single:migrateEdit(p.single||{},'single'),
+  albums:[]
+ };
+}
+
+$('loadProject').onchange=async e=>{
+ try{
+  const rawText=(await e.target.files[0].text()).replace(/^\uFEFF/,'').trim();
+  const p=migrateProject(JSON.parse(rawText));
+
+  state.mode=p.mode;
+  state.active=p.active;
+  state.common=p.common;
+  state.lefts=p.lefts.length?p.lefts:[emptyEdit()];
+  state.single=p.single;
+  state.albums=p.albums;
+  state.compareOriginal=false;
+
+  $('leftW').value=p.leftW;
+  $('leftH').value=p.leftH;
+  $('rightW').value=p.rightW;
+  $('rightH').value=p.rightH;
+  $('pairCopies').value=p.pairCopies;
+
+  for(const item of [state.common,state.single,...state.lefts,...state.albums]){
+   if(item?.imgData)item.img=await imageFrom(item.imgData);
+  }
+
+  setMode(state.mode||'goods');
+  $('status').textContent='プロジェクトを読み込みました。位置情報も現在の描画方式へ変換しました。';
+ }catch(err){
+  console.error(err);
+  $('status').textContent='読み込みに失敗しました。ファイル形式を確認してください。';
+ }
+};
 
 renderAll();
 </script>
