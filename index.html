@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Photo Template Studio v3 LTS Final Edition</title>
+<title>Photo Template Studio v3 LTS Final Edition 1.1</title>
 <style>
 :root{--bg:#f4f7fb;--card:#fff;--ink:#172033;--muted:#667085;--line:#d9e1ec;--pri:#315efb;--pri2:#244bd8;--sec:#0f766e;--danger:#b42318}
 *{box-sizing:border-box}
@@ -120,7 +120,7 @@ summary{cursor:pointer;font-weight:800;min-height:40px;display:flex;align-items:
 <body>
 <div class="wrap">
 <header>
-<h1>Photo Template Studio v3 LTS</h1><span class="badge">Final Edition</span>
+<h1>Photo Template Studio v3 LTS</h1><span class="badge">Final Edition 1.1</span>
 <div class="small">手動調整を中心に、AI配置・AI補正を必要なときだけ使える長期安定版です。</div>
 </header>
 
@@ -889,9 +889,101 @@ function renderPrint(){
 }
 ['leftW','leftH','rightW','rightH','paperSize','paperOrientation','photoQty','albumPaper','albumOrientation','albumLayout'].forEach(id=>$(id).oninput=renderAll);
 
-function saveCanvas(name,type='png'){const a=document.createElement('a');a.download=name;a.href=$('printCanvas').toDataURL(type==='jpg'?'image/jpeg':'image/png',.95);a.click()}
-$('savePng').onclick=()=>saveCanvas('photo-template.png');
-$('savePdf').onclick=()=>{const a=document.createElement('a');a.download='photo-template.jpg';a.href=$('printCanvas').toDataURL('image/jpeg',.96);a.click();$('status').textContent='PDF互換用の高画質JPGを保存しました。'};
+function canvasBlob(canvas,type,quality){
+ return new Promise((resolve,reject)=>{
+  canvas.toBlob(blob=>blob?resolve(blob):reject(new Error('blob creation failed')),type,quality);
+ });
+}
+function downloadBlob(blob,name){
+ const url=URL.createObjectURL(blob);
+ const a=document.createElement('a');
+ a.href=url;
+ a.download=name;
+ document.body.appendChild(a);
+ a.click();
+ a.remove();
+ setTimeout(()=>URL.revokeObjectURL(url),60000);
+}
+async function shareOrDownload(blob,name,title){
+ const file=new File([blob],name,{type:blob.type});
+ try{
+  if(navigator.share && (!navigator.canShare || navigator.canShare({files:[file]}))){
+   await navigator.share({title,files:[file]});
+   $('status').textContent=`${name} の共有画面を開きました。`;
+   return;
+  }
+ }catch(err){
+  if(err && err.name==='AbortError'){
+   $('status').textContent='共有をキャンセルしました。';
+   return;
+  }
+ }
+ downloadBlob(blob,name);
+ $('status').textContent=`${name} を保存しました。`;
+}
+function bytesFromDataUrl(dataUrl){
+ const binary=atob(dataUrl.split(',')[1]);
+ const out=new Uint8Array(binary.length);
+ for(let i=0;i<binary.length;i++)out[i]=binary.charCodeAt(i);
+ return out;
+}
+function concatByteArrays(parts){
+ const total=parts.reduce((sum,p)=>sum+p.length,0);
+ const out=new Uint8Array(total);
+ let offset=0;
+ for(const p of parts){out.set(p,offset);offset+=p.length}
+ return out;
+}
+function canvasToPdfBlob(canvas){
+ const enc=new TextEncoder();
+ const jpg=bytesFromDataUrl(canvas.toDataURL('image/jpeg',.96));
+ const pageW=canvas.width/MM*72/25.4;
+ const pageH=canvas.height/MM*72/25.4;
+ const stream=`q\n${pageW} 0 0 ${pageH} 0 0 cm\n/Im0 Do\nQ\n`;
+ const objs=[
+  `1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n`,
+  `2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n`,
+  `3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageW} ${pageH}] /Resources << /XObject << /Im0 5 0 R >> >> /Contents 4 0 R >>\nendobj\n`,
+  `4 0 obj\n<< /Length ${enc.encode(stream).length} >>\nstream\n${stream}endstream\nendobj\n`
+ ];
+ const header=enc.encode('%PDF-1.4\n%\xFF\xFF\xFF\xFF\n');
+ const parts=[header],offsets=[0];
+ let len=header.length;
+ for(const obj of objs){offsets.push(len);const b=enc.encode(obj);parts.push(b);len+=b.length}
+ offsets.push(len);
+ const imageHead=enc.encode(`5 0 obj\n<< /Type /XObject /Subtype /Image /Width ${canvas.width} /Height ${canvas.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpg.length} >>\nstream\n`);
+ const imageTail=enc.encode('\nendstream\nendobj\n');
+ parts.push(imageHead,jpg,imageTail);
+ len+=imageHead.length+jpg.length+imageTail.length;
+ const xrefAt=len;
+ let xref='xref\n0 6\n0000000000 65535 f \n';
+ for(let i=1;i<=5;i++)xref+=String(offsets[i]).padStart(10,'0')+' 00000 n \n';
+ xref+=`trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${xrefAt}\n%%EOF`;
+ parts.push(enc.encode(xref));
+ return new Blob([concatByteArrays(parts)],{type:'application/pdf'});
+}
+$('savePng').onclick=async()=>{
+ try{
+  renderPrint();
+  $('status').textContent='PNGを作成しています…';
+  const blob=await canvasBlob($('printCanvas'),'image/png');
+  await shareOrDownload(blob,'photo-template.png','Photo Template Studio PNG');
+ }catch(err){
+  console.error(err);
+  $('status').textContent='PNGの作成に失敗しました。';
+ }
+};
+$('savePdf').onclick=async()=>{
+ try{
+  renderPrint();
+  $('status').textContent='PDFを作成しています…';
+  const blob=canvasToPdfBlob($('printCanvas'));
+  await shareOrDownload(blob,'photo-template.pdf','Photo Template Studio PDF');
+ }catch(err){
+  console.error(err);
+  $('status').textContent='PDFの作成に失敗しました。';
+ }
+};
 
 async function compactImageData(edit,maxSide=900,quality=.72){
  if(!edit || (!edit.img && !edit.imgData))return edit?.imgData||null;
